@@ -5,24 +5,34 @@ using System.Collections;
 public class GameController : MonoBehaviour {
 
   public string[] Questions;
-  private QuestionData data = new QuestionData();
   public InputField input;
   public Text question;
   public Text output;
 
   public void Start() {
-    data = SceneController.getQuestionData();
-  }
-  public void Awake() {
+    question.text = SceneController.data.Questions[SceneController.data.number];
+    output.text = "";
+    input.text = SceneController.data.currentInput;
   }
   public void Update() {
-    data.currenttext = input.text;
+    SceneController.data.currentInput = input.text;
   }
   public void toInstructions() {
-    SceneController.data = data;
     SceneController.toInstructions();
   }
-  public void checkAnswer(){
-    input.transform.position = new Vector3(100,100,100);
+  public void checkAnswer() {
+    if(input.text.Equals(SceneController.data.Answers[SceneController.data.number])) {
+      output.text = "Correct!";
+      SceneController.data.correct++;
+      SceneController.data.number++;
+      question.text = SceneController.data.Questions[SceneController.data.number];
+      input.text = "";
+    } else {
+      output.text = "Incorrect";
+      SceneController.data.incorrect++;
+      SceneController.data.number++;
+      question.text = SceneController.data.Questions[SceneController.data.number];
+      input.text = "";
+    }
   }
 }
