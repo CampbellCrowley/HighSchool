@@ -40,5 +40,8 @@ public class ScoreController : MonoBehaviour {
      }
   }
   public
-   void toMenu() { SceneController.toMenu(); }
+   void toMenu() {
+     SceneController.resetGameData();
+     SceneController.toMenu();
+   }
 }

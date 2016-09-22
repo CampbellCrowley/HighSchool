@@ -9,6 +9,12 @@ public
   public
    InputField input;
   public
+   Slider sliderObject;
+  public
+   Text sliderText;
+  private
+   GameObject[] slider;
+  public
    Text question, output, title;
    [Range(0.0f, 10.0f)] public float tolerance = 0.1f;
    [Range(-5000.0f, 5000.0f)] public float moveDist = 500f;
@@ -55,11 +61,21 @@ public
        "Challenge? HA!"};
   private
    bool movedown = false, moveleft = false, moveright = false,
-        writingTitle = true, resetTitle=false;
-  private string nextTitle = "Ready?\nThe game has already begun!";
-  private float deltaLastTextUpdate = 0;
- private Vector3 questionStartPos;
+        writingTitle = true, resetTitle = false, isSliderVisible = true;
+  private
+   string nextTitle = "Ready?\nThe game has already begun!";
+  private
+   float deltaLastTextUpdate = 0;
+  private
+   Vector3 questionStartPos, sliderTextStart;
 
+ public void Awake() {
+    sliderTextStart = sliderText.transform.position;
+    slider = GameObject.FindGameObjectsWithTag("Slider");
+    foreach(GameObject s in slider)
+      s.SetActive(false);
+    isSliderVisible = false;
+ }
  public
   void Start() {
     questionStartPos = question.transform.position;
@@ -108,6 +124,21 @@ public
           output.text = "";
           nextTitle = RandomText[Random.Range(0, RandomText.Length)];
           writingTitle = true;
+          if (!isSliderVisible &&
+              QuestionData.Types[SceneController.data.number] ==
+                  QuestionData.SLIDER) {
+            foreach (GameObject s in slider)
+              s.SetActive(true);
+            isSliderVisible = true;
+            Debug.Log("Slider Down");
+          } else if (isSliderVisible &&
+                     QuestionData.Types[SceneController.data.number] !=
+                         QuestionData.SLIDER) {
+            foreach (GameObject s in slider)
+              s.SetActive(false);
+            isSliderVisible = false;
+            Debug.Log("Slider Up");
+          }
         } else {
           question.transform.position =
               new Vector3(questionStartPos.x,
@@ -161,6 +192,16 @@ public
         deltaLastTextUpdate = 0;
       }
     }
+    if(isSliderVisible) {
+      input.gameObject.SetActive(false);
+      sliderText.transform.position =
+          sliderTextStart +
+          Vector3.right * (sliderObject.normalizedValue - 0.5f) * 550f;
+      // Slider is 550 wide
+      sliderText.text = sliderObject.value+"";
+    } else {
+      input.gameObject.SetActive(true);
+    }
   }
  public
   void toInstructions() { SceneController.toInstructions(); }
@@ -174,7 +215,9 @@ public
  public
   void checkAnswer() {
     input.DeactivateInputField();
-    if (input.text.Length == 0) {
+    if (input.text.Length == 0 &&
+        QuestionData.Types[SceneController.data.number] ==
+            QuestionData.TEXT_FIELD) {
       // title.text = "That's not an answer...";
       title.text = RandomEmpty[Random.Range(0,RandomEmpty.Length)];
       resetTitle = false;
@@ -205,33 +248,50 @@ public
   }
  private
   bool validateAnswer() {
-    // input and answer strings are identical
-    if (input.text.Equals(
-            SceneController.data.Answers[SceneController.data.number])) {
-      Debug.Log("Correct under condition 1");
-      return true;
-    }
+    switch (QuestionData.Types[SceneController.data.number]) {
+      default:
+      case QuestionData.TEXT_FIELD:
+        // input and answer strings are identical
+        if (input.text.Equals(
+                SceneController.data.Answers[SceneController.data.number])) {
+          Debug.Log("Correct under condition 1A");
+          return true;
+        }
 
-    float answer_ =
-        float.Parse(SceneController.data.Answers[SceneController.data.number]);
-    float input_ = float.Parse(input.text);
+        float answer_ = float.Parse(
+            SceneController.data.Answers[SceneController.data.number]);
+        float input_ = float.Parse(input.text);
 
-    // If rounded values of both the answer and input are identical
-    if ((float)(Mathf.Round(answer_ * 100) / 100) ==
-        (float)(Mathf.Round(input_ * 100) / 100)) {
-      Debug.Log("Correct under condition 2\nRounded Values\nA:" + answer_ +
-                "\nI:" + input_);
-      return true;
+        // If rounded values of both the answer and input are identical
+        if ((float)(Mathf.Round(answer_ * 100) / 100) ==
+            (float)(Mathf.Round(input_ * 100) / 100)) {
+          Debug.Log("Correct under condition 2A\nRounded Values\nA:" + answer_ +
+                    "\nI:" + input_);
+          return true;
+        }
+        // If input is within a tolerance of the correct answer (not rounded)
+        if (answer_ * 10f % 1 != 0 &&
+            (answer_ + tolerance > input_ && answer_ - tolerance < input_)) {
+          Debug.Log("Correct under condition 3A\nWithin tolerance\nA:" +
+                    answer_ + "\nT:" + tolerance + "\nI:" + input_);
+          return true;
+        }
+        Debug.Log("Incorrect\nA:" + answer_ + "\nT:" + tolerance + "\nI:" +
+                  input_);
+        return false;
+      case QuestionData.SLIDER:
+        if (SceneController.data.Answers[SceneController.data.number].Equals(
+                sliderObject.value+"")) {
+          Debug.Log("Correct under condition 1B");
+          return true;
+        }
+        Debug.Log(
+            "Incorrect\nA:" +
+            float.Parse(
+                SceneController.data.Answers[SceneController.data.number]) +
+            "\nT:" + tolerance + "\nI:" + sliderObject.value);
+        return false;
     }
-    // If input is within a tolerance of the correct answer (not rounded)
-    if (answer_*10f % 1 != 0 &&
-        (answer_ + tolerance > input_ && answer_ - tolerance < input_)) {
-      Debug.Log("Correct under condition 3\nWithin tolerance\nA:" + answer_ +
-                "\nT:" + tolerance + "\nI:" + input_);
-      return true;
-    }
-    Debug.Log("Incorrect\nA:" + answer_ + "\nT:" + tolerance + "\nI:" + input_);
-    return false;
   }
-}
+ }
 

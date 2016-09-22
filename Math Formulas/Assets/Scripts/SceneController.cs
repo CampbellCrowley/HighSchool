@@ -28,6 +28,10 @@ class SceneController : MonoBehaviour {
     data.processValues();
   }
 
+ public static void resetGameData() {
+    data = new QuestionData();
+    data.processValues();
+ }
  public
   static void toInstructions() {
     PreviousScene = SceneManager.GetActiveScene().name;
@@ -61,6 +65,8 @@ class SceneController : MonoBehaviour {
 public class QuestionData {
  private
   const float pi = 3.14f;
+ public
+  const int TEXT_FIELD = 0, SLIDER = 1;
 
  public
   int number = 0;
@@ -76,23 +82,39 @@ public class QuestionData {
       "What is the area of a circle with a radius of " + getNum(0) + "?",
       "What is the area of a triangle with a base of " + getNum(1, 0) +
           " and a height of " + getNum(1, 1) + "?",
-      "What is the area of a trapezoid with a bases of " + getNum(2, 0) +
+      "What is the area of a trapezoid with bases of " + getNum(2, 0) +
           " and " + getNum(2, 1) + " and a height of " + getNum(2, 2) + "?",
       "What is the volume of a sphere with a radius of " + getNum(3) + "?",
       "What is the distance between the two poins: (" + getNum(4, 0) + ", " +
-          getNum(4, 1) + ") (" + getNum(4, 2) + ", " + getNum(4, 3) + ")?"};
+          getNum(4, 1) + ") (" + getNum(4, 2) + ", " + getNum(4, 3) + ")?",
+      "Where is " + getNum(5,0) + " on the number line?"};
+
+ // Ensure the first value equals the number of Questions
+ public
+  static float[, ] values = new float[ 6, 5 ];
+
+ // Ensure the size equals the number of Questions
+ public
+  string[] Answers = new string[6];
 
  public
-  static float[, ] values = new float[ 5, 5 ];
-
- public
-  string[] Answers = new string[5];
+  static int[] Types = {TEXT_FIELD, TEXT_FIELD, TEXT_FIELD,
+                        TEXT_FIELD, TEXT_FIELD, SLIDER};
 
  private
   static float getNum(int question, int part = 0) {
-    int number = Random.Range(0, 11);
-    values[ question, part ] = number;
-    return number;
+    if (Types[question] == TEXT_FIELD) {
+      int number = Random.Range(0, 11);
+      values[ question, part ] = number;
+      return number;
+    } else if(Types[question] == SLIDER) {
+      int number = Random.Range(-10, 11);
+      values[ question, part ] = number;
+      return number;
+    } else {
+      Debug.LogError("Invalid type of question");
+      return 0;
+    }
   }
 
  public
@@ -113,6 +135,8 @@ public class QuestionData {
                             ((values[ 4, 3 ] - values[ 4, 1 ]) *
                              (values[ 4, 3 ] - values[ 4, 1 ]))) +
                  "";
+    // Number Line
+    Answers[5] = values[ 5, 0 ] + "";
 
     Debug.Log(string.Join("\n", Answers));
     return true;
