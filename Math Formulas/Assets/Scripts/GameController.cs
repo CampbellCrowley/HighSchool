@@ -27,7 +27,7 @@ class GameController : MonoBehaviour {
   [Range(0.0f, 1.0f)] public float textSpeed = 0.03f;
  public
   string decimalInfoText = "At least one digit after the decimal is required";
- private
+ public
   string[] RandomText = {
       "Thinking is fun.", "You can do it!", "I believe in you!",
       "Don't take too long on this one.", "Hmm...",

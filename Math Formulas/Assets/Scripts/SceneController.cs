@@ -100,7 +100,10 @@ class SceneController : MonoBehaviour {
     changeScene = true;
     nextScene = PreviousScene;
   }
-
+ public
+  static void QuitGame() {
+    Application.Quit();
+  }
 }
 
 public class QuestionData {

@@ -10,5 +10,8 @@ public class MenuController : MonoBehaviour {
   public void toGame() {
     SceneController.toGame();
   }
+  public void Quit() {
+    SceneController.QuitGame();
+  }
 
 }
