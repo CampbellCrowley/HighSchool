@@ -1,0 +1,64 @@
+Initialize engine version: 5.4.0f3 (a6d8d714de6f)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: Intel(R) HD Graphics 520 (ID=0x1916)
+    Vendor:   Intel
+    VRAM:     2147 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+- Completed reload, in  0.044 seconds
+Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Math Formulas\LatestBuild\MathFormulasV1_Data\Managed\System.dll (this message is harmless)
+<RI> Initializing input.
+XInput1_3.dll not found. Trying XInput9_1_0.dll instead...
+<RI> Input initialized.
+desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
+<RI> Initialized touch support.
+UnloadTime: 1.059555 ms
+78.5
+90
+66
+4186.667
+8.062258
+-9
+55X^4
+18
+12.77778
+2
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 4.623407 ms
+
+Unloading 10 unused Assets to reduce memory usage. Loaded Objects now: 200.
+Total: 4.235456 ms (FindLiveObjects: 0.120098 ms CreateObjectMapping: 0.041481 ms MarkObjects: 0.547160 ms  DeleteObjects: 3.522765 ms)
+
+Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0.693728 ms
+
+Unloading 1 unused Assets to reduce memory usage. Loaded Objects now: 221.
+Total: 0.242567 ms (FindLiveObjects: 0.032000 ms CreateObjectMapping: 0.006716 ms MarkObjects: 0.198716 ms  DeleteObjects: 0.004345 ms)
+
+Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 0.392296 ms
+
+Unloading 5 unused Assets to reduce memory usage. Loaded Objects now: 283.
+Total: 3.666567 ms (FindLiveObjects: 0.019358 ms CreateObjectMapping: 0.006716 ms MarkObjects: 0.225580 ms  DeleteObjects: 3.414518 ms)
+
+Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 1.056790 ms
+
+Unloading 14 unused Assets to reduce memory usage. Loaded Objects now: 200.
+Total: 5.211259 ms (FindLiveObjects: 0.052938 ms CreateObjectMapping: 0.016197 ms MarkObjects: 0.402172 ms  DeleteObjects: 4.737975 ms)
+
+Setting up 1 worker threads for Enlighten.
+  Thread -> id: 14d0 -> priority: 1 
