@@ -17,10 +17,8 @@ public class PlayerController : MonoBehaviour {
   private float hmovements, vmovements;
   private Vector2 startPos;
 
-  void Awake() {
-    startPos = transform.position;
-  }
   void Start() {
+    startPos = transform.position;
     ResetPlayer();
   }
   void Update() {
@@ -65,7 +63,7 @@ public class PlayerController : MonoBehaviour {
   }
 
   void ResetPlayer() {
-    transform.localScale = new Vector3(Scale, Scale, Scale);
+    // transform.localScale = new Vector3(Scale, Scale, Scale);
     // transform.position = new Vector2(-715f, -293f);
     transform.position = startPos;
     rbody.velocity = new Vector2(0f,0f);
