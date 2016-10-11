@@ -59,7 +59,7 @@ public class PlayerController : MonoBehaviour {
     if(rbody.velocity.x > 7) {
       rbody.velocity = new Vector2(7, rbody.velocity.y);
     }
-    if(rbody.velocity.y > 10) {
+    if(false && rbody.velocity.y > 10) {
       rbody.velocity = new Vector2(rbody.velocity.x, 10);
     }
   }
