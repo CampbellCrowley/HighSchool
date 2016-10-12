@@ -91,13 +91,14 @@ class PortalController : MonoBehaviour {
   void rotateVelocity(float Angle) {
     float mag = PlayerController.rbody.velocity.magnitude;
     float angle = Mathf.Atan(PlayerController.rbody.velocity.y /
-                                    PlayerController.rbody.velocity.x) +
-                  (Angle * Mathf.PI / 180f);
+                                    PlayerController.rbody.velocity.x);
     angle *= 180f / Mathf.PI;
-    Debug.Log("Angle: " +
-              Mathf.Atan(PlayerController.rbody.velocity.y /
-                         PlayerController.rbody.velocity.x)*180f/Mathf.PI +
-              " --> " + angle);
+    if(transform.localScale.x < 0) angle+=180f;
+    for(;Angle < 0; Angle+=360f);
+    for(;angle < 0; angle+=360f);
+    Debug.Log("Angle: " + angle +
+              " --> " + (angle+Angle));
+    angle += Angle;
     Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.forward);
     Vector2 direction = rotation * new Vector2(mag, 0f);
     Vector2 velocity = direction;
