@@ -26,6 +26,8 @@ class PlayerController : MonoBehaviour {
   int collectedItems = 0;
  public
   int neededItems = 10;
+ public
+  GameObject exit;
 
   void Awake() {
     text.text = "0 Dirts Collected";
@@ -86,7 +88,11 @@ class PlayerController : MonoBehaviour {
       collectedItems++;
       text.text = collectedItems + " Dirts Collected of " + neededItems;
       Destroy(other.gameObject);
-      if(collectedItems>=neededItems) nextLevel();
+      // if(collectedItems>=neededItems) nextLevel();
+    } else if (other.gameObject.CompareTag("Portal")) {
+      if(collectedItems >= neededItems) {
+        nextLevel();
+      }
     }
   }
   void restartScene() {
