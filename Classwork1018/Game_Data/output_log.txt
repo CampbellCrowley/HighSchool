@@ -14,7 +14,7 @@ Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Classwork1018\Game_Dat
 Loading C:\Users\P6\Documents\GitHub\UnityGame\Classwork1018\Game_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
 Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Classwork1018\Game_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
 Loading C:\Users\P6\Documents\GitHub\UnityGame\Classwork1018\Game_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
-- Completed reload, in  0.178 seconds
+- Completed reload, in  0.048 seconds
 Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Classwork1018\Game_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: C:\Users\P6\Documents\GitHub\UnityGame\Classwork1018\Game_Data\Managed\System.dll (this message is harmless)
 desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
@@ -22,24 +22,6 @@ desktop: 1920x1080 60Hz; virtual: 1920x1080 at 0,0
 XInput1_3.dll not found. Trying XInput9_1_0.dll instead...
 <RI> Input initialized.
 <RI> Initialized touch support.
-UnloadTime: 1.051653 ms
-Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 1.840591 ms
-
-Unloading 3 unused Assets to reduce memory usage. Loaded Objects now: 1413.
-Total: 0.303802 ms (FindLiveObjects: 0.104296 ms CreateObjectMapping: 0.018172 ms MarkObjects: 0.175407 ms  DeleteObjects: 0.005530 ms)
-
-Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0.318419 ms
-
-Unloading 1 unused Assets to reduce memory usage. Loaded Objects now: 2511.
-Total: 0.501727 ms (FindLiveObjects: 0.171456 ms CreateObjectMapping: 0.029629 ms MarkObjects: 0.294320 ms  DeleteObjects: 0.005925 ms)
-
-Unloading 4 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0.924838 ms
-
-Unloading 8 unused Assets to reduce memory usage. Loaded Objects now: 165.
-Total: 0.148938 ms (FindLiveObjects: 0.030814 ms CreateObjectMapping: 0.007506 ms MarkObjects: 0.063604 ms  DeleteObjects: 0.046222 ms)
-
+UnloadTime: 1.126319 ms
 Setting up 1 worker threads for Enlighten.
-  Thread -> id: 17b8 -> priority: 1 
+  Thread -> id: 15cc -> priority: 1 
