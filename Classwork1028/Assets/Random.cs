@@ -14,6 +14,15 @@ public class Random : MonoBehaviour {
     line.useWorldSpace = true;
     line.SetPositions(pathHistory);
     line.SetWidth(0.01F, 0.01F);
+    line.material = new Material(Shader.Find("Particles/Additive"));
+    /*line.SetColors(new Color(UnityEngine.Random.Range(0f,1f),
+                             UnityEngine.Random.Range(0f,1f),
+                             UnityEngine.Random.Range(0f,1f)),
+                   new Color(UnityEngine.Random.Range(0f,1f),
+                             UnityEngine.Random.Range(0f,1f),
+                             UnityEngine.Random.Range(0f,1f))
+                  );*/
+    line.SetColors(Color.green, Color.red);
     rbody.velocity = InitialVelocity;
   }
 	void FixedUpdate () {
@@ -32,7 +41,7 @@ public class Random : MonoBehaviour {
              -transform.position.y*UnityEngine.Random.Range(0f,1f)
         )
     );
-    float maxVelocity = 50f;
+    float maxVelocity = 100f;
     if(rbody.velocity.x> maxVelocity) rbody.velocity = new Vector2(maxVelocity, rbody.velocity.y);
     if(rbody.velocity.y> maxVelocity) rbody.velocity = new Vector2(rbody.velocity.x, maxVelocity);
     if(rbody.velocity.x<-maxVelocity) rbody.velocity = new Vector2(-maxVelocity, rbody.velocity.y);
