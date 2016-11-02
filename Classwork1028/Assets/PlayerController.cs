@@ -18,6 +18,10 @@ class PlayerController : MonoBehaviour {
   float xCamOffset = 8f, yCamOffset = 1.5f, yCamTolerance = 1f;
  public
   GameObject exit;
+ public
+  AudioSource jumpSound;
+ public
+  GameObject collectSoundObject;
  private
   bool touchingFloor = false, jump = false;
  private
@@ -61,6 +65,7 @@ class PlayerController : MonoBehaviour {
 
     if (jump && touchingFloor) {
       rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
+      jumpSound.Play();
       jump = false;
     } else {
       rbody.AddForce(new Vector2(hmovements * moveForce, 0));
@@ -85,6 +90,7 @@ class PlayerController : MonoBehaviour {
     if (other.gameObject.CompareTag("Collectible")) {
       GameData.dirts++;
       text.text = GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
+      Instantiate(collectSoundObject);
       Destroy(other.gameObject);
       // if(collectedItems>=neededItems) nextLevel();
     } else if (other.gameObject.CompareTag("Portal")) {
