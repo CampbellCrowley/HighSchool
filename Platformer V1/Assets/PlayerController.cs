@@ -71,7 +71,7 @@ class PlayerController : MonoBehaviour {
       rbody.AddForce(new Vector2(hmovements * moveForce, 0));
     }
 
-    if (rbody.velocity.x*0.02 < 0) {
+    if (rbody.velocity.x*0.02f + transform.position.x < 0) {
       transform.position = new Vector2(0, transform.position.y);
       rbody.velocity = new Vector2(0, rbody.velocity.y);
     }
@@ -90,11 +90,12 @@ class PlayerController : MonoBehaviour {
       text.text = GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
       Instantiate(collectSoundObject);
       Destroy(other.gameObject);
-      // if(collectedItems>=neededItems) nextLevel();
     } else if (other.gameObject.CompareTag("Portal")) {
       if(GameData.dirts >= GameData.getNeededDirts()) {
         GameData.NextLevel();
       }
+    } else if (other.gameObject.CompareTag("Enemy")) {
+      GameData.RestartLevel();
     }
   }
 }

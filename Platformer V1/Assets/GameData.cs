@@ -9,6 +9,9 @@ public class GameData : MonoBehaviour {
   // Current number of collectibles.
  public
   static int dirts = 0;
+  // Numbers of lives remaining
+ public
+  static int lives = 3;
   // Needed number of collected collectibles to continue to next level.
  public
   int[] NeededDirts = {0, 0, 0};

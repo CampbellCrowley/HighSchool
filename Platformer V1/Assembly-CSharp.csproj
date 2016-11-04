@@ -47,6 +47,7 @@
   <ItemGroup>
      <Compile Include="Assets\CollectibleController.cs" />
      <Compile Include="Assets\GameData.cs" />
+     <Compile Include="Assets\PlaySoundOnLoad.cs" />
      <Compile Include="Assets\PlayerController.cs" />
      <Compile Include="Assets\Random.cs" />
      <Compile Include="Assets\WinScript.cs" />
