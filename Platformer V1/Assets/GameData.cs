@@ -11,7 +11,7 @@ public class GameData : MonoBehaviour {
   static int dirts = 0;
   // Numbers of lives remaining
  public
-  static int lives = 3;
+  static int lives = 0;
   // Needed number of collected collectibles to continue to next level.
  public
   int[] NeededDirts = {0, 0, 0};
@@ -49,10 +49,15 @@ public class GameData : MonoBehaviour {
   static void DecrementDirts() {
     dirts--;
   }
-  // Returns the number of currently collected collectibles.
+  // Increase the current number of remaining lives by 1.
  public
-  static int GetLives() {
-    return dirts;
+  static void IncrementLives() {
+    lives++;
+  }
+  // Decrease the current number of remaining lives by 1.
+ public
+  static void DecrementLives() {
+    lives--;
   }
   // Returns the needed number of collected collectibles for the current level.
  public
@@ -72,6 +77,13 @@ public class GameData : MonoBehaviour {
   static void NextLevel() {
     Instance.InitialDirts = dirts;
     SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex+1);
+  }
+  // Load the first level and reset all data to uninitialized state.
+ public
+  static void GameOver() {
+    Debug.Log("Game Over");
+    SceneManager.LoadScene(0);
+    Destroy(Instance.gameObject);
   }
  public
   static void Update() {

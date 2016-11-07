@@ -13,7 +13,7 @@ class PlayerController : MonoBehaviour {
  public
   GameObject MainCamera;
  public
-  GUIText text;
+  GUIText text, lives;
  public
   float xCamOffset = 8f, yCamOffset = 1.5f, yCamTolerance = 1f;
  public
@@ -32,6 +32,7 @@ class PlayerController : MonoBehaviour {
   void Awake() {
     rbody = rbody_;
     text.text = GameData.dirts + " Dirts Collected";
+    lives.text = GameData.lives + " Lives Remaining";
     startPos = transform.position;
   }
   void Start() {
@@ -46,12 +47,16 @@ class PlayerController : MonoBehaviour {
     } else if (hmovements > 0) {
       transform.localScale = new Vector3(Scale, Scale, Scale);
     }
-    float camx = transform.position.x + xCamOffset;
     float camy = MainCamera.transform.position.y;
+    float camw = Screen.width/Screen.dpi+MainCamera.GetComponent<Camera>().orthographicSize;
+    float camx = transform.position.x + xCamOffset*camw;
     if (camy < transform.position.y + yCamOffset - yCamTolerance) {
       camy = transform.position.y + yCamOffset - yCamTolerance;
     } else if (camy > transform.position.y + yCamOffset + yCamTolerance) {
       camy = transform.position.y + yCamOffset + yCamTolerance;
+    }
+    if (camx - camw/2 < 0) {
+      camx = camw/2;
     }
     MainCamera.transform.position = new Vector3(camx, camy, -10f);
   }
@@ -95,7 +100,12 @@ class PlayerController : MonoBehaviour {
         GameData.NextLevel();
       }
     } else if (other.gameObject.CompareTag("Enemy")) {
-      GameData.RestartLevel();
+      GameData.DecrementLives();
+      if(GameData.lives < 0) {
+        GameData.GameOver();
+      } else {
+        GameData.RestartLevel();
+      }
     }
   }
 }
