@@ -1,5 +1,5 @@
 GitIgnore
-*Library*
+*/Library/*
 *.swp
 *.swo
 *.sln

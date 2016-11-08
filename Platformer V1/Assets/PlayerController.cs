@@ -16,23 +16,29 @@ class PlayerController : MonoBehaviour {
   GUIText text, lives;
  public
   float xCamOffset = 8f, yCamOffset = 1.5f, yCamTolerance = 1f,
-        backgroundSpeed = 0.8f;
+        backgroundSpeed = 0.8f, deadTime = 3f;
  public
   AudioSource jumpSound;
  public
-  GameObject collectSoundObject;
+  GameObject collectSoundObject, deathSound;
 
  private
-  bool touchingFloor = false, jump = false, lastTouchingFloor = false;
+  bool touchingFloor = false, jump = false, lastTouchingFloor = false,
+       dead = false, newDeath = true;
  private
   float hmovements, vmovements;
  private
   Vector2 startPos;
+ private
+  Quaternion startRot;
+ private
+  float DeathTime;
 
  public
   void Awake() {
     rbody = rbody_;
     startPos = transform.position;
+    startRot = transform.rotation;
   }
 
  public
@@ -47,10 +53,12 @@ class PlayerController : MonoBehaviour {
     vmovements = Input.GetAxis("Vertical");
     jump = Input.GetButton("Jump") || vmovements > 0.5;
 
-    if (hmovements < 0) {
-      transform.localScale = new Vector3(-Scale, Scale, Scale);
-    } else if (hmovements > 0) {
-      transform.localScale = new Vector3(Scale, Scale, Scale);
+    if(!dead) {
+      if (hmovements < 0) {
+        transform.localScale = new Vector3(-Scale, Scale, Scale);
+      } else if (hmovements > 0) {
+        transform.localScale = new Vector3(Scale, Scale, Scale);
+      }
     }
 
     float camy = MainCamera.transform.position.y;
@@ -83,24 +91,35 @@ class PlayerController : MonoBehaviour {
     }
 
     if (transform.position.y < -10) ResetPlayer(true);
-
-    if (jump && touchingFloor) {
-      rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
-      jumpSound.Play();
-      Instantiate(jumpParticles, transform.position + Vector3.down,
-                  Quaternion.identity);
-      jump = false;
-    } else {
-      if (touchingFloor && !lastTouchingFloor) {
+    if(!dead) {
+      if (jump && touchingFloor) {
+        rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
+        jumpSound.Play();
         Instantiate(jumpParticles, transform.position + Vector3.down,
                     Quaternion.identity);
+        jump = false;
+      } else {
+        if (touchingFloor && !lastTouchingFloor) {
+          Instantiate(jumpParticles, transform.position + Vector3.down,
+                      Quaternion.identity);
+        }
+        rbody.AddForce(new Vector2(hmovements * moveForce, 0));
       }
-      rbody.AddForce(new Vector2(hmovements * moveForce, 0));
-    }
 
-    if (rbody.velocity.x * 0.02f + transform.position.x < 0) {
-      transform.position = new Vector2(0, transform.position.y);
-      rbody.velocity = new Vector2(0, rbody.velocity.y);
+      if (rbody.velocity.x * 0.02f + transform.position.x < 0) {
+        transform.position = new Vector2(0, transform.position.y);
+        rbody.velocity = new Vector2(0, rbody.velocity.y);
+      }
+    } else {
+      if(Time.timeSinceLevelLoad - DeathTime >= deadTime) {
+        ResetPlayer();
+      } else if(newDeath) {
+        rbody.velocity = new Vector2(0,0);
+        rbody.AddForceAtPosition(new Vector2(-100, 5), (Vector2)transform.position + 1.25f*Vector2.up);
+        rbody.freezeRotation = false;
+        newDeath=false;
+        Instantiate(deathSound);
+      }
     }
   }
 
@@ -108,6 +127,10 @@ class PlayerController : MonoBehaviour {
   void ResetPlayer(bool reload = false) {
     transform.localScale = new Vector3(Scale, Scale, Scale);
     transform.position = startPos;
+    transform.rotation = startRot;
+    rbody.freezeRotation = true;
+    dead = false;
+    newDeath = true;
     rbody.velocity = new Vector2(0f, 0f);
     if (reload) GameData.RestartLevel();
   }
@@ -124,12 +147,14 @@ class PlayerController : MonoBehaviour {
       if (GameData.dirts >= GameData.getNeededDirts()) {
         GameData.NextLevel();
       }
-    } else if (other.gameObject.CompareTag("Enemy")) {
+    } else if (!dead && other.gameObject.CompareTag("Enemy")) {
       GameData.DecrementLives();
+      dead = true;
+      DeathTime = Time.timeSinceLevelLoad;
       if (GameData.lives < 0) {
         GameData.GameOver();
       } else {
-        ResetPlayer();
+        // ResetPlayer();
       }
     }
   }
