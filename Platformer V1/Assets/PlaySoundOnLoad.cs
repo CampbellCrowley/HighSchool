@@ -1,17 +1,17 @@
 ﻿using UnityEngine;
 using System.Collections;
+#pragma warning disable 0108
 
-public class PlaySoundOnLoad : MonoBehaviour {
-
-  private AudioSource audio;
-	// Use this for initialization
-	void Start () {
-	  audio = gameObject.GetComponent(typeof(AudioSource)) as AudioSource;
+public
+class PlaySoundOnLoad : MonoBehaviour {
+ private
+  AudioSource audio;
+  void Start() {
+    audio = gameObject.GetComponent(typeof(AudioSource)) as AudioSource;
     audio.Play();
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	  if(!audio.isPlaying) Destroy(gameObject);
-	}
+  }
+
+  void Update() {
+    if (!audio.isPlaying) Destroy(gameObject);
+  }
 }

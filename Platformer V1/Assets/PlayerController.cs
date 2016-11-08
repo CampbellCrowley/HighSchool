@@ -11,56 +11,72 @@ class PlayerController : MonoBehaviour {
  public
   float Scale = 0.25f, moveForce = 10, jumpVelocity = 10;
  public
-  GameObject MainCamera;
+  GameObject MainCamera, background, exit, jumpParticles;
  public
   GUIText text, lives;
  public
-  float xCamOffset = 8f, yCamOffset = 1.5f, yCamTolerance = 1f;
- public
-  GameObject exit;
+  float xCamOffset = 8f, yCamOffset = 1.5f, yCamTolerance = 1f,
+        backgroundSpeed = 0.8f;
  public
   AudioSource jumpSound;
  public
   GameObject collectSoundObject;
+
  private
-  bool touchingFloor = false, jump = false;
+  bool touchingFloor = false, jump = false, lastTouchingFloor = false;
  private
   float hmovements, vmovements;
  private
   Vector2 startPos;
 
+ public
   void Awake() {
     rbody = rbody_;
-    text.text = GameData.dirts + " Dirts Collected";
-    lives.text = GameData.lives + " Lives Remaining";
     startPos = transform.position;
   }
-  void Start() {
-    ResetPlayer();
-  }
+
+ public
+  void Start() { ResetPlayer(); }
+
+ public
   void Update() {
+    text.text = GameData.dirts + " Dirts Collected";
+    lives.text = GameData.lives + " Lives Remaining";
+
     hmovements = Input.GetAxis("Horizontal");
     vmovements = Input.GetAxis("Vertical");
     jump = Input.GetButton("Jump") || vmovements > 0.5;
+
     if (hmovements < 0) {
       transform.localScale = new Vector3(-Scale, Scale, Scale);
     } else if (hmovements > 0) {
       transform.localScale = new Vector3(Scale, Scale, Scale);
     }
+
     float camy = MainCamera.transform.position.y;
-    float camw = Screen.width/Screen.dpi+MainCamera.GetComponent<Camera>().orthographicSize;
-    float camx = transform.position.x + xCamOffset*camw;
+    float camw =
+        Vector2.Distance(MainCamera.GetComponent<Camera>().ScreenToWorldPoint(
+                             new Vector2(Screen.width, 0)),
+                         MainCamera.GetComponent<Camera>().ScreenToWorldPoint(
+                             new Vector2(0, 0)));
+    float camx = transform.position.x + xCamOffset * camw;
+
     if (camy < transform.position.y + yCamOffset - yCamTolerance) {
       camy = transform.position.y + yCamOffset - yCamTolerance;
     } else if (camy > transform.position.y + yCamOffset + yCamTolerance) {
       camy = transform.position.y + yCamOffset + yCamTolerance;
     }
-    if (camx - camw/2 < 0) {
-      camx = camw/2;
+    if (camx - camw / 2 < 0) {
+      camx = camw / 2;
     }
     MainCamera.transform.position = new Vector3(camx, camy, -10f);
+    background.transform.position =
+        new Vector2((camx + camw / 2) * backgroundSpeed, camy);
   }
+
+ public
   void FixedUpdate() {
+    lastTouchingFloor = touchingFloor;
     foreach (GameObject each in GameObject.FindGameObjectsWithTag("Floor")) {
       touchingFloor = rbody.IsTouching(each.GetComponent<Collider2D>());
       if (touchingFloor) break;
@@ -71,40 +87,49 @@ class PlayerController : MonoBehaviour {
     if (jump && touchingFloor) {
       rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
       jumpSound.Play();
+      Instantiate(jumpParticles, transform.position + Vector3.down,
+                  Quaternion.identity);
       jump = false;
     } else {
+      if (touchingFloor && !lastTouchingFloor) {
+        Instantiate(jumpParticles, transform.position + Vector3.down,
+                    Quaternion.identity);
+      }
       rbody.AddForce(new Vector2(hmovements * moveForce, 0));
     }
 
-    if (rbody.velocity.x*0.02f + transform.position.x < 0) {
+    if (rbody.velocity.x * 0.02f + transform.position.x < 0) {
       transform.position = new Vector2(0, transform.position.y);
       rbody.velocity = new Vector2(0, rbody.velocity.y);
     }
   }
 
+ public
   void ResetPlayer(bool reload = false) {
     transform.localScale = new Vector3(Scale, Scale, Scale);
     transform.position = startPos;
     rbody.velocity = new Vector2(0f, 0f);
-    if(reload) GameData.RestartLevel();
+    if (reload) GameData.RestartLevel();
   }
 
+ public
   void OnTriggerEnter2D(Collider2D other) {
     if (other.gameObject.CompareTag("Collectible")) {
       GameData.dirts++;
-      text.text = GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
+      text.text =
+          GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
       Instantiate(collectSoundObject);
       Destroy(other.gameObject);
     } else if (other.gameObject.CompareTag("Portal")) {
-      if(GameData.dirts >= GameData.getNeededDirts()) {
+      if (GameData.dirts >= GameData.getNeededDirts()) {
         GameData.NextLevel();
       }
     } else if (other.gameObject.CompareTag("Enemy")) {
       GameData.DecrementLives();
-      if(GameData.lives < 0) {
+      if (GameData.lives < 0) {
         GameData.GameOver();
       } else {
-        GameData.RestartLevel();
+        ResetPlayer();
       }
     }
   }
