@@ -20,7 +20,7 @@ class PlayerController : MonoBehaviour {
  public
   AudioSource jumpSound;
  public
-  GameObject collectSoundObject, deathSound;
+  GameObject collectSoundObject, deathSound, collectLifeSoundObject;
 
  private
   bool touchingFloor = false, jump = false, lastTouchingFloor = false,
@@ -53,7 +53,7 @@ class PlayerController : MonoBehaviour {
     vmovements = Input.GetAxis("Vertical");
     jump = Input.GetButton("Jump") || vmovements > 0.5;
 
-    if(!dead) {
+    if (!dead) {
       if (hmovements < 0) {
         transform.localScale = new Vector3(-Scale, Scale, Scale);
       } else if (hmovements > 0) {
@@ -91,7 +91,7 @@ class PlayerController : MonoBehaviour {
     }
 
     if (transform.position.y < -10) ResetPlayer(true);
-    if(!dead) {
+    if (!dead) {
       if (jump && touchingFloor) {
         rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
         jumpSound.Play();
@@ -111,13 +111,15 @@ class PlayerController : MonoBehaviour {
         rbody.velocity = new Vector2(0, rbody.velocity.y);
       }
     } else {
-      if(Time.timeSinceLevelLoad - DeathTime >= deadTime) {
+      if (Time.timeSinceLevelLoad - DeathTime >= deadTime) {
         ResetPlayer();
-      } else if(newDeath) {
-        rbody.velocity = new Vector2(0,0);
-        rbody.AddForceAtPosition(new Vector2(-100, 5), (Vector2)transform.position + 1.25f*Vector2.up);
+      } else if (newDeath) {
+        rbody.velocity = new Vector2(0, 0);
+        rbody.AddForceAtPosition(
+            new Vector2(-100, 5),
+            (Vector2)transform.position + 1.25f * Vector2.up);
         rbody.freezeRotation = false;
-        newDeath=false;
+        newDeath = false;
         Instantiate(deathSound);
       }
     }
@@ -140,7 +142,8 @@ class PlayerController : MonoBehaviour {
     if (other.gameObject.CompareTag("Collectible")) {
       GameData.dirts++;
       text.text =
-          GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
+          //GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
+          GameData.dirts + " Dirts Collected";
       Instantiate(collectSoundObject);
       Destroy(other.gameObject);
     } else if (other.gameObject.CompareTag("Portal")) {
@@ -156,6 +159,10 @@ class PlayerController : MonoBehaviour {
       } else {
         // ResetPlayer();
       }
+    } else if (other.gameObject.CompareTag("Health")) {
+      Destroy(other.gameObject);
+      GameData.IncrementLives();
+      Instantiate(collectLifeSoundObject);
     }
   }
 }
