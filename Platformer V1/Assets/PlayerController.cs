@@ -47,7 +47,7 @@ class PlayerController : MonoBehaviour {
  public
   void Update() {
     text.text = GameData.dirts + " Dirts Collected";
-    lives.text = GameData.lives + " Lives Remaining";
+    lives.text = "Level " + GameData.GetLevel() + " (" + GameData.lives + " Lives Remaining)";
 
     hmovements = Input.GetAxis("Horizontal");
     vmovements = Input.GetAxis("Vertical");
@@ -142,11 +142,11 @@ class PlayerController : MonoBehaviour {
     if (other.gameObject.CompareTag("Collectible")) {
       GameData.dirts++;
       text.text =
-          //GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
-          GameData.dirts + " Dirts Collected";
+          GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
+          // GameData.dirts + " Dirts Collected";
       Instantiate(collectSoundObject);
       Destroy(other.gameObject);
-    } else if (other.gameObject.CompareTag("Portal")) {
+    } else if (other.gameObject.CompareTag("Exit")) {
       if (GameData.dirts >= GameData.getNeededDirts()) {
         GameData.NextLevel();
       }

@@ -15,7 +15,7 @@ class GameData : MonoBehaviour {
   static int lives;
   // Needed number of collected collectibles to continue to next level.
  public
-  int[] NeededDirts = {0, 0, 0};
+  int[] NeededDirts = {5, 10, 20};
   // If this key is pressed the level will be skipped.
  public
   KeyCode SkipLevel = KeyCode.P;
@@ -86,6 +86,11 @@ class GameData : MonoBehaviour {
   static void NextLevel() {
     InitialDirts = dirts;
     SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+  }
+ 
+ public
+  static int GetLevel() {
+    return SceneManager.GetActiveScene().buildIndex;
   }
 
   // Load the first level and reset all data to uninitialized state.
