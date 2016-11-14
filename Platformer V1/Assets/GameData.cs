@@ -87,6 +87,11 @@ class GameData : MonoBehaviour {
     InitialDirts = dirts;
     SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
   }
+
+ public
+  static void toInstructions() {
+    SceneManager.LoadScene("Help");
+  }
  
  public
   static int GetLevel() {
