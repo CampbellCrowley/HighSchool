@@ -46,8 +46,10 @@ class PlayerController : MonoBehaviour {
 
  public
   void Update() {
-    text.text = GameData.dirts + " Dirts Collected";
-    lives.text = "Level " + GameData.GetLevel() + " (" + GameData.lives + " Lives Remaining)";
+    text.text =
+        GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
+    lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
+        ? "LAST LIFE)" : (GameData.lives + " Lives Remaining"));
 
     hmovements = Input.GetAxis("Horizontal");
     vmovements = Input.GetAxis("Vertical");
@@ -90,7 +92,10 @@ class PlayerController : MonoBehaviour {
       if (touchingFloor) break;
     }
 
-    if (transform.position.y < -10) ResetPlayer(true);
+    if (transform.position.y < -10) {
+      GameData.DecrementLives();
+      ResetPlayer(false);
+    }
     if (!dead) {
       if (jump && touchingFloor) {
         rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
@@ -141,9 +146,6 @@ class PlayerController : MonoBehaviour {
   void OnTriggerEnter2D(Collider2D other) {
     if (other.gameObject.CompareTag("Collectible")) {
       GameData.dirts++;
-      text.text =
-          GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
-          // GameData.dirts + " Dirts Collected";
       Instantiate(collectSoundObject);
       Destroy(other.gameObject);
     } else if (other.gameObject.CompareTag("Exit")) {
@@ -154,7 +156,7 @@ class PlayerController : MonoBehaviour {
       GameData.DecrementLives();
       dead = true;
       DeathTime = Time.timeSinceLevelLoad;
-      if (GameData.lives < 0) {
+      if (GameData.lives <= 0) {
         GameData.GameOver();
       } else {
         // ResetPlayer();

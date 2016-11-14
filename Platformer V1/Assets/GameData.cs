@@ -89,10 +89,15 @@ class GameData : MonoBehaviour {
   }
 
  public
+  static void PreviousLevel() {
+    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex - 1);
+  }
+
+ public
   static void toInstructions() {
     SceneManager.LoadScene("Help");
   }
- 
+
  public
   static int GetLevel() {
     return SceneManager.GetActiveScene().buildIndex;

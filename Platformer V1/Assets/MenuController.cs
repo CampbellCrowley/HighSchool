@@ -10,6 +10,9 @@ public class MenuController : MonoBehaviour {
   public void toGame() {
     GameData.NextLevel();
   }
+  public void toMenu() {
+    GameData.GameOver();
+  }
   public void Quit() {
     Application.Quit();
   }
