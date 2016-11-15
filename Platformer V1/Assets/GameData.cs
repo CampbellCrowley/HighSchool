@@ -69,7 +69,10 @@ class GameData : MonoBehaviour {
   // Returns the needed number of collected collectibles for the current level.
  public
   static int getNeededDirts() {
-    return Instance.NeededDirts[SceneManager.GetActiveScene().buildIndex];
+    if (SceneManager.GetActiveScene().buildIndex > 0)
+      return Instance.NeededDirts[SceneManager.GetActiveScene().buildIndex - 1];
+    else
+      return 0;
   }
 
   // Reload the current scene and reset collectibles to initial amount at the

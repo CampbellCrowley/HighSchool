@@ -49,7 +49,7 @@ class PlayerController : MonoBehaviour {
     text.text =
         GameData.dirts + " Dirts Collected of " + GameData.getNeededDirts();
     lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
-        ? "LAST LIFE)" : (GameData.lives + " Lives Remaining"));
+        ? "LAST LIFE)" : (GameData.lives + " Lives Remaining)"));
 
     hmovements = Input.GetAxis("Horizontal");
     vmovements = Input.GetAxis("Vertical");
@@ -87,8 +87,12 @@ class PlayerController : MonoBehaviour {
  public
   void FixedUpdate() {
     lastTouchingFloor = touchingFloor;
+    touchingFloor = false;
     foreach (GameObject each in GameObject.FindGameObjectsWithTag("Floor")) {
-      touchingFloor = rbody.IsTouching(each.GetComponent<Collider2D>());
+      foreach (Collider2D each2 in each.GetComponents<Collider2D>()) {
+        touchingFloor = rbody.IsTouching(each2);
+        if (touchingFloor) break;
+      }
       if (touchingFloor) break;
     }
 
