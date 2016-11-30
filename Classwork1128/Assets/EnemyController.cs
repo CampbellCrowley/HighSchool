@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
+﻿using UnityEngine; using System.Collections;
 
 public class EnemyController : MonoBehaviour {
 
@@ -16,9 +15,26 @@ public class EnemyController : MonoBehaviour {
   }
 	void FixedUpdate () {
     if(Time.realtimeSinceStartup % (time*2) < time) {
-      rbody.position = new Vector2(startPos.x + (speed * (Time.realtimeSinceStartup % (time*2))), rbody.position.y);
+      rbody.position =
+        new Vector2(
+          startPos.x + (speed * (Time.realtimeSinceStartup % (time*2))),
+          rbody.position.y
+        );
     } else {
-      rbody.position = new Vector2(startPos.x + ((time*2*speed) - speed * (Time.realtimeSinceStartup % (time*2))), rbody.position.y);
+      rbody.position =
+        new Vector2(
+          startPos.x + ((time*2*speed) - speed *
+                (Time.realtimeSinceStartup % (time*2))),
+          rbody.position.y
+        );
     }
 	}
+
+  void OnCollisionEnter2D(Collision2D other) {
+    if(other.gameObject.CompareTag("Projectile")) {
+      Debug.Log("Kill!");
+      Destroy(other.gameObject);
+      Destroy(gameObject);
+    }
+  }
 }

@@ -27,8 +27,6 @@ public class TimeDisplayer : MonoBehaviour {
                 "\nDeltaErrorLoad: " + (Time.timeSinceLevelLoad - time) +
                 "\nLoadErrorStartup: " + (Time.realtimeSinceStartup - Time.timeSinceLevelLoad) +
                 "\n\nFrames: " + Time.frameCount +
-                "\nFPSReal: " + Time.frameCount / (Time.realtimeSinceStartup-offset) +
-                "\nFPSDelta: " + Time.frameCount / Time.time +
-                "\nOffset: " + offset;
+                "\nFPSRealLoad: " + Time.frameCount / Time.timeSinceLevelLoad;
 	}
 }

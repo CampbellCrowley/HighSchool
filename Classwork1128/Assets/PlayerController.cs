@@ -93,7 +93,7 @@ class PlayerController : MonoBehaviour {
     }
 
     if (transform.position.y < -10) {
-      ResetPlayer(false);
+      ResetPlayer(true);
     }
     if (!dead) {
       if (jump && touchingFloor) {
@@ -141,6 +141,7 @@ class PlayerController : MonoBehaviour {
     newDeath = true;
     rbody.velocity = new Vector2(0f, 0f);
     // if (reload) GameData.RestartLevel();
+    if(reload) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
   }
 
  public
