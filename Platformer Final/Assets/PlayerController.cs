@@ -17,9 +17,7 @@ class PlayerController : MonoBehaviour {
   float xCamOffset = 8f, yCamOffset = 1.5f, yCamTolerance = 1f,
         backgroundSpeed = 0.8f, deadTime = 3f;
  public
-  AudioSource jumpSound;
- public
-  GameObject collectSoundObject, deathSound, collectLifeSoundObject;
+  GameObject jumpSound, collectSoundObject, deathSound, collectLifeSoundObject;
 
  private
   bool touchingFloor = false, jump = false, lastTouchingFloor = false,
@@ -75,7 +73,7 @@ class PlayerController : MonoBehaviour {
     }
     MainCamera.transform.position = new Vector3(camx, camy, -10f);
     background.transform.position =
-        new Vector2((camx + camw / 2) * backgroundSpeed, camy);
+        new Vector2((camx + camw / 2) * backgroundSpeed, -camy);
   }
 
  public
@@ -96,14 +94,14 @@ class PlayerController : MonoBehaviour {
     if (!dead) {
       if (jump && touchingFloor) {
         rbody.velocity = new Vector2(rbody.velocity.x, jumpVelocity);
-        try{jumpSound.Play();} catch (UnassignedReferenceException e) {}
-        try{Instantiate(jumpParticles, transform.position + Vector3.down,
+        try{Instantiate(jumpSound);} catch (UnassignedReferenceException e) {}
+        try{Instantiate(jumpParticles, transform.position + Vector3.down/2,
                     Quaternion.identity);} catch (UnassignedReferenceException e) {}
 
         jump = false;
       } else {
         if (touchingFloor && !lastTouchingFloor) {
-          try{Instantiate(jumpParticles, transform.position + Vector3.down,
+          try{Instantiate(jumpParticles, transform.position + Vector3.down/2,
                       Quaternion.identity);} catch (UnassignedReferenceException e) {}
 
         }
