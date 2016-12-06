@@ -43,6 +43,10 @@ class PlayerController : MonoBehaviour {
 
  public
   void Update() {
+    text.text =
+        GameData.collectibles + " Collectibles Collected of " + GameData.getNeededCollectibles();
+    lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
+        ? "LAST LIFE)" : (GameData.lives + " Lives Remaining)"));
     hmovements = Input.GetAxis("Horizontal");
     vmovements = Input.GetAxis("Vertical");
     jump = Input.GetButton("Jump") || vmovements > 0.5;
@@ -136,8 +140,8 @@ class PlayerController : MonoBehaviour {
     dead = false;
     newDeath = true;
     rbody.velocity = new Vector2(0f, 0f);
-    // if (reload) GameData.RestartLevel();
-    if(reload) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    if (reload) GameData.RestartLevel();
+    // if(reload) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
   }
 
  public
@@ -145,7 +149,9 @@ class PlayerController : MonoBehaviour {
     if (other.gameObject.CompareTag("Collectible")) {
       Instantiate(collectSoundObject);
       Destroy(other.gameObject);
+      GameData.IncrementCollectibles();
     } else if (other.gameObject.CompareTag("Exit")) {
+      GameData.NextLevel();
     } else if (!dead && other.gameObject.CompareTag("Enemy")) {
       dead = true;
       DeathTime = Time.timeSinceLevelLoad;
