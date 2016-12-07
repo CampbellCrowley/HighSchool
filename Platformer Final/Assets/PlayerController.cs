@@ -44,7 +44,8 @@ class PlayerController : MonoBehaviour {
  public
   void Update() {
     text.text =
-        GameData.collectibles + " Collectibles Collected of " + GameData.getNeededCollectibles();
+        // GameData.collectibles + " Collectibles Collected of " + GameData.getNeededCollectibles();
+        GameData.collectibles + " Collectibles Collected";
     lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
         ? "LAST LIFE)" : (GameData.lives + " Lives Remaining)"));
     hmovements = Input.GetAxis("Horizontal");
@@ -77,7 +78,7 @@ class PlayerController : MonoBehaviour {
     }
     MainCamera.transform.position = new Vector3(camx, camy, -10f);
     background.transform.position =
-        new Vector2((camx + camw / 2) * backgroundSpeed, -camy);
+        new Vector2((camx + camw / 2) * backgroundSpeed, camy);
   }
 
  public
@@ -119,6 +120,8 @@ class PlayerController : MonoBehaviour {
     } else {
       if (Time.timeSinceLevelLoad - DeathTime >= deadTime) {
         ResetPlayer();
+      } else if (Time.timeSinceLevelLoad - DeathTime >= deadTime / 2) {
+        GameData.lives--;
       } else if (newDeath) {
         rbody.velocity = new Vector2(0, 0);
         rbody.AddForceAtPosition(

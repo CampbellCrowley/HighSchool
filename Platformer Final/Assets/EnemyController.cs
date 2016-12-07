@@ -1,4 +1,5 @@
 ﻿using UnityEngine; using System.Collections;
+#pragma warning disable 0168
 
 public class EnemyController : MonoBehaviour {
 
@@ -28,6 +29,10 @@ public class EnemyController : MonoBehaviour {
           rbody.position.y
         );
     }
+    try {
+      transform.rotation = Quaternion.AngleAxis(rbody.position.x-startPos.x /
+                GetComponent<CircleCollider2D>().radius * Mathf.PI / 2f, Vector3.right);
+    } catch (MissingComponentException e) {}
 	}
 
   void OnCollisionEnter2D(Collision2D other) {
