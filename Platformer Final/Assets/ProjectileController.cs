@@ -13,7 +13,7 @@ public class ProjectileController : MonoBehaviour {
   }
   void Start() {
     birthTime = Time.timeSinceLevelLoad;
-    GetComponent<Rigidbody2D>().velocity = new Vector2(speed / transform.localScale.x, 0f);
+    GetComponent<Rigidbody2D>().velocity += new Vector2(speed / transform.localScale.x, 0f);
     Physics2D.IgnoreCollision(gameObject.GetComponent<Collider2D>(),
         GameObject.FindGameObjectWithTag("Player").GetComponent<Collider2D>());
     foreach (GameObject each in GameObject.FindGameObjectsWithTag("Projectile")) {

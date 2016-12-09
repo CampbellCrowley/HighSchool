@@ -1,4 +1,5 @@
-﻿using UnityEngine; using System.Collections;
+﻿using UnityEngine;
+using System.Collections;
 #pragma warning disable 0168
 
 public class EnemyController : MonoBehaviour {
@@ -30,8 +31,8 @@ public class EnemyController : MonoBehaviour {
         );
     }
     try {
-      transform.rotation = Quaternion.AngleAxis(rbody.position.x-startPos.x /
-                GetComponent<CircleCollider2D>().radius * Mathf.PI / 2f, Vector3.right);
+      transform.rotation = Quaternion.AngleAxis((transform.position.x-startPos.x) /
+                (GetComponent<CircleCollider2D>().radius * Mathf.PI / 180f * transform.localScale.x), -Vector3.forward);
     } catch (MissingComponentException e) {}
 	}
 
