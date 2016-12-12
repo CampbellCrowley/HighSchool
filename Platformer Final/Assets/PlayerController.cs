@@ -46,8 +46,12 @@ class PlayerController : MonoBehaviour {
     text.text =
         // GameData.collectibles + " Collectibles Collected of " + GameData.getNeededCollectibles();
         GameData.collectibles + " Collectibles Collected";
-    lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
-        ? "LAST LIFE)" : (GameData.lives + " Lives Remaining)"));
+    if(GameData.lives > 0) {
+      lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
+          ? "LAST LIFE)" : (GameData.lives + " Lives Remaining)"));
+    } else {
+      lives.text = "GAME OVER";
+    }
     hmovements = Input.GetAxis("Horizontal");
     vmovements = Input.GetAxis("Vertical");
     jump = Input.GetButton("Jump") || vmovements > 0.5;
@@ -119,15 +123,18 @@ class PlayerController : MonoBehaviour {
       }
     } else {
       if (Time.timeSinceLevelLoad - DeathTime >= deadTime) {
-        ResetPlayer();
-      } else if (Time.timeSinceLevelLoad - DeathTime >= deadTime / 2) {
-        GameData.lives--;
+          if(GameData.lives<=0) {
+            GameData.GameOver();
+          } else {
+            ResetPlayer();
+          }
       } else if (newDeath) {
         rbody.velocity = new Vector2(0, 0);
         rbody.AddForceAtPosition(
             new Vector2(-100, 5),
             (Vector2)transform.position + 1.25f * Vector2.up);
         rbody.freezeRotation = false;
+        GameData.lives--;
         newDeath = false;
         Instantiate(deathSound);
       }
@@ -136,6 +143,11 @@ class PlayerController : MonoBehaviour {
 
  public
   void ResetPlayer(bool reload = false) {
+    if (reload) {
+      GameData.RestartLevel();
+      //SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+      return;
+    }
     transform.localScale = new Vector3(Scale, Scale, Scale);
     transform.position = startPos;
     transform.rotation = startRot;
@@ -143,8 +155,6 @@ class PlayerController : MonoBehaviour {
     dead = false;
     newDeath = true;
     rbody.velocity = new Vector2(0f, 0f);
-    if (reload) GameData.RestartLevel();
-    // if(reload) SceneManager.LoadScene(SceneManager.GetActiveScene().name);
   }
 
  public
