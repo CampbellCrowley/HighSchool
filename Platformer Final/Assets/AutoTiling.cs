@@ -5,9 +5,12 @@ using System.Collections;
 public class AutoTiling : MonoBehaviour {
   public GameObject[] tiles = new GameObject[0];
   public float multiplier = 1f;
+  public string searchtag = "FloorTile";
   public bool updateList = false;
+  // Y tiling direction vs X tiling
+  public bool YDirection = false;
   public void UpdateList() {
-    tiles = GameObject.FindGameObjectsWithTag("FloorTile");
+    tiles = GameObject.FindGameObjectsWithTag(searchtag);
   }
   public void OnGUI() {
     Event e = Event.current;
@@ -24,9 +27,13 @@ public class AutoTiling : MonoBehaviour {
       // Debug.Log("E " + e);
       // Debug.Log("END");
       if(e.keyCode == KeyCode.T) {
-        Debug.Log("Tiling!");
+        Debug.Log("Tiling! " + YDirection);
         for(int i=0; i<tiles.Length; i++) {
-          tiles[i].transform.position = Vector2.right*i*multiplier;
+          if(YDirection) {
+            tiles[i].transform.position = Vector2.up*i*multiplier;
+          } else {
+            tiles[i].transform.position = Vector2.right*i*multiplier;
+          }
         }
       }
     }

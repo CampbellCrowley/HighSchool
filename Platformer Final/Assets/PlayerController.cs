@@ -89,7 +89,16 @@ class PlayerController : MonoBehaviour {
   void FixedUpdate() {
     lastTouchingFloor = touchingFloor;
     touchingFloor = false;
-    foreach (GameObject each in GameObject.FindGameObjectsWithTag("Floor")) {
+
+    string floortag1 = "Floor";
+    string floortag2 = "ClimbableWall";
+    GameObject[] floor1 = GameObject.FindGameObjectsWithTag(floortag1);
+    GameObject[] floor2 = GameObject.FindGameObjectsWithTag(floortag2);
+    GameObject[] floors = new GameObject[floor1.Length + floor2.Length];
+    floor1.CopyTo(floors, 0);
+    floor2.CopyTo(floors, floor1.Length);
+
+    foreach (GameObject each in floors) {
       foreach (Collider2D each2 in each.GetComponents<Collider2D>()) {
         touchingFloor = rbody.IsTouching(each2);
         if (touchingFloor) break;
