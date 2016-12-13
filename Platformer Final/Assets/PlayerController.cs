@@ -10,7 +10,7 @@ class PlayerController : MonoBehaviour {
  public
   float Scale = 0.25f, moveForce = 10, jumpVelocity = 10;
  public
-  GameObject MainCamera, background, exit, jumpParticles;
+  GameObject MainCamera, background, jumpParticles;
  public
   GUIText text, lives;
  public
@@ -47,8 +47,8 @@ class PlayerController : MonoBehaviour {
         // GameData.collectibles + " Collectibles Collected of " + GameData.getNeededCollectibles();
         GameData.collectibles + " Collectibles Collected";
     if(GameData.lives > 0) {
-      lives.text = "Level " + GameData.GetLevel() + " (" + ((GameData.lives == 1)
-          ? "LAST LIFE)" : (GameData.lives + " Lives Remaining)"));
+      lives.text = "Level " + GameData.GetLevel() + " || " + ((GameData.lives == 1)
+          ? "LAST LIFE" : (GameData.lives + " Lives Remaining"));
     } else {
       lives.text = "GAME OVER";
     }
@@ -140,8 +140,8 @@ class PlayerController : MonoBehaviour {
       } else if (newDeath) {
         rbody.velocity = new Vector2(0, 0);
         rbody.AddForceAtPosition(
-            new Vector2(-100, 5),
-            (Vector2)transform.position + 1.25f * Vector2.up);
+            new Vector2(-150, 100),
+            (Vector2)transform.position + 1.5f * Vector2.up);
         rbody.freezeRotation = false;
         GameData.lives--;
         newDeath = false;
