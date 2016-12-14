@@ -133,6 +133,10 @@ class PlayerController : MonoBehaviour {
         rbody.velocity = new Vector2(0, rbody.velocity.y);
       }
     } else {
+      GameObject[] projectiles = GameObject.FindGameObjectsWithTag("Projectile");
+      foreach (GameObject each in projectiles) {
+        Destroy(each);
+      }
       if (Time.timeSinceLevelLoad - DeathTime >= deadTime) {
           if(GameData.lives<=0) {
             GameData.GameOver();

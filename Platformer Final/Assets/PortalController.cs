@@ -4,11 +4,16 @@ using System.Collections;
 
 public
 class PortalController : MonoBehaviour {
-  public bool DEBUG = false;
+ public
+  bool DEBUG = false;
  public
   GameObject BluePortal, OrangePortal;
  public
   GameObject PurplePortal, GreenPortal;
+ public
+  bool Player = true;
+ private
+  Rigidbody2D NonPlayerRbody;
  private
   Collider2D BlueCollider, OrangeCollider, PurpleCollider, GreenCollider;
  private
@@ -22,10 +27,36 @@ class PortalController : MonoBehaviour {
 
  public
   void Awake() {
+    Debug.Log("Shots Fired!");
+    if(!Player)
+      NonPlayerRbody = GetComponent<Rigidbody2D>();
+
     if (BluePortal != null)
       BlueCollider = BluePortal.GetComponent<Collider2D>();
+    else {
+      GameObject[] temp = GameObject.FindGameObjectsWithTag("Portal");
+      for(int i=0; i<temp.Length; i++) {
+        if(temp[i].name.Contains("Blue")) {
+          BlueCollider = temp[i].GetComponent<Collider2D>();
+          BluePortal = temp[i];
+          // Debug.Log("Found Blue Portal!");
+          break;
+        }
+      }
+    }
     if (OrangePortal != null)
       OrangeCollider = OrangePortal.GetComponent<Collider2D>();
+    else {
+      GameObject[] temp = GameObject.FindGameObjectsWithTag("Portal");
+      for(int i=0; i<temp.Length; i++) {
+        if(temp[i].name.Contains("Orange")) {
+          OrangeCollider = temp[i].GetComponent<Collider2D>();
+          OrangePortal = temp[i];
+          // Debug.Log("Found Orange Portal!");
+          break;
+        }
+      }
+    }
     if (PurplePortal != null)
       PurpleCollider = PurplePortal.GetComponent<Collider2D>();
     if (GreenPortal != null)
@@ -70,7 +101,8 @@ class PortalController : MonoBehaviour {
     justTeleportedToOrange = true;
     transform.position = OrangePortal.transform.position;
     rotateVelocity(OrangePortal.transform.rotation.eulerAngles.z -
-                   BluePortal.transform.rotation.eulerAngles.z + 180f);
+                   BluePortal.transform.rotation.eulerAngles.z + 180f,
+                   BluePortal.transform.rotation.eulerAngles.z);
     if(DEBUG)
       PlayerController.rbody.velocity = new Vector2(10f, 30f);
   }
@@ -80,7 +112,8 @@ class PortalController : MonoBehaviour {
     justTeleportedToBlue = true;
     transform.position = BluePortal.transform.position;
     rotateVelocity(BluePortal.transform.rotation.eulerAngles.z -
-                   OrangePortal.transform.rotation.eulerAngles.z + 180f);
+                   OrangePortal.transform.rotation.eulerAngles.z + 180,
+                   OrangePortal.transform.rotation.eulerAngles.z);
   }
 
  private
@@ -88,7 +121,8 @@ class PortalController : MonoBehaviour {
     justTeleportedToPurple = true;
     transform.position = PurplePortal.transform.position;
     rotateVelocity(PurplePortal.transform.rotation.eulerAngles.z -
-                   GreenPortal.transform.rotation.eulerAngles.z + 180f);
+                   GreenPortal.transform.rotation.eulerAngles.z + 180f,
+                   GreenPortal.transform.rotation.eulerAngles.z);
   }
 
  private
@@ -96,22 +130,29 @@ class PortalController : MonoBehaviour {
     justTeleportedToGreen = true;
     transform.position = GreenPortal.transform.position;
     rotateVelocity(GreenPortal.transform.rotation.eulerAngles.z -
-                   PurplePortal.transform.rotation.eulerAngles.z + 180f);
+                   PurplePortal.transform.rotation.eulerAngles.z + 180f,
+                   PurplePortal.transform.rotation.eulerAngles.z);
   }
 
  private
-  void rotateVelocity(float Angle) {
-    float mag = PlayerController.rbody.velocity.magnitude;
-    float velAngle = Mathf.Atan(PlayerController.rbody.velocity.y /
-                                PlayerController.rbody.velocity.x);
+  void rotateVelocity(float Angle, float Base) {
+    Rigidbody2D rbody_;
+    if(Player) {
+      rbody_ = PlayerController.rbody;
+    } else {
+      rbody_ = NonPlayerRbody;
+    }
+    float mag = rbody_.velocity.magnitude;
+    float velAngle = Mathf.Atan(rbody_.velocity.y /
+                                rbody_.velocity.x);
     float newAngle = velAngle + (Angle * Mathf.PI / 180f);
 
     newAngle *= 180f / Mathf.PI;
 
     Debug.Log("Angle: " + velAngle * 180f / Mathf.PI + " --> " + newAngle);
-    Quaternion rotation = Quaternion.AngleAxis(newAngle, Vector3.forward);
+    Quaternion rotation = Quaternion.AngleAxis(newAngle+Base+90f, Vector3.forward);
     Vector2 direction = rotation * new Vector2(mag, 0f);
     Vector2 velocity = direction;
-    PlayerController.rbody.velocity = velocity;
+    rbody_.velocity = velocity;
   }
 }
