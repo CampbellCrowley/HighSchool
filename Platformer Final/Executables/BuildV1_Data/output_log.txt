@@ -14,14 +14,14 @@ Platform assembly: E:\Users\Campbell\Documents\UnityGameDev\Platformer Final\Exe
 Loading E:\Users\Campbell\Documents\UnityGameDev\Platformer Final\Executables\BuildV1_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
 Platform assembly: E:\Users\Campbell\Documents\UnityGameDev\Platformer Final\Executables\BuildV1_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
 Loading E:\Users\Campbell\Documents\UnityGameDev\Platformer Final\Executables\BuildV1_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
-- Completed reload, in  0.115 seconds
+- Completed reload, in  0.096 seconds
 Platform assembly: E:\Users\Campbell\Documents\UnityGameDev\Platformer Final\Executables\BuildV1_Data\Managed\System.Core.dll (this message is harmless)
 Platform assembly: E:\Users\Campbell\Documents\UnityGameDev\Platformer Final\Executables\BuildV1_Data\Managed\System.dll (this message is harmless)
 desktop: 1920x1080 60Hz; virtual: 5760x1200 at -1920,-59
 <RI> Initializing input.
 <RI> Input initialized.
 <RI> Initialized touch support.
-UnloadTime: 0.722711 ms
+UnloadTime: 1.014300 ms
 Resetting GameData
  
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
@@ -31,35 +31,11 @@ To Help
 (Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
 
 Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 5.064092 ms
+UnloadTime: 3.272390 ms
 
-Unloading 3 unused Assets to reduce memory usage. Loaded Objects now: 205.
-Total: 0.159722 ms (FindLiveObjects: 0.022744 ms CreateObjectMapping: 0.005877 ms MarkObjects: 0.127011 ms  DeleteObjects: 0.003322 ms)
-
-Game Over
- 
-(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
-
-Resetting GameData
- 
-(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
-
-Unloading 2 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0.237411 ms
-
-Unloading 1 unused Assets to reduce memory usage. Loaded Objects now: 218.
-Total: 0.140300 ms (FindLiveObjects: 0.012777 ms CreateObjectMapping: 0.004088 ms MarkObjects: 0.120622 ms  DeleteObjects: 0.002300 ms)
-
-To Help
- 
-(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
-
-Unloading 3 Unused Serialized files (Serialized files now loaded: 0)
-UnloadTime: 0.415022 ms
-
-Unloading 1 unused Assets to reduce memory usage. Loaded Objects now: 205.
-Total: 0.143111 ms (FindLiveObjects: 0.013544 ms CreateObjectMapping: 0.004344 ms MarkObjects: 0.122411 ms  DeleteObjects: 0.002555 ms)
+Unloading 3 unused Assets to reduce memory usage. Loaded Objects now: 208.
+Total: 0.172244 ms (FindLiveObjects: 0.035011 ms CreateObjectMapping: 0.006388 ms MarkObjects: 0.127522 ms  DeleteObjects: 0.002811 ms)
 
 Setting up 2 worker threads for Enlighten.
-  Thread -> id: 2e94 -> priority: 1 
-  Thread -> id: 107c -> priority: 1 
+  Thread -> id: 3288 -> priority: 1 
+  Thread -> id: 978 -> priority: 1 
