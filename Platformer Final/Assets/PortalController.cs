@@ -4,6 +4,7 @@ using System.Collections;
 
 public
 class PortalController : MonoBehaviour {
+  public bool DEBUG = false;
  public
   GameObject BluePortal, OrangePortal;
  public
@@ -70,6 +71,8 @@ class PortalController : MonoBehaviour {
     transform.position = OrangePortal.transform.position;
     rotateVelocity(OrangePortal.transform.rotation.eulerAngles.z -
                    BluePortal.transform.rotation.eulerAngles.z + 180f);
+    if(DEBUG)
+      PlayerController.rbody.velocity = new Vector2(10f, 30f);
   }
 
  private

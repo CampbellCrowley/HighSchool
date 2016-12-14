@@ -6,7 +6,7 @@ public class GameData : MonoBehaviour {
  public
   static int collectibles = 0;
  public
-  static int lives = 3;
+  static int lives = 5;
  public
   int[] NeededCollectibles = {100, 200, 400};
  private
@@ -33,7 +33,7 @@ public class GameData : MonoBehaviour {
   static void ResetData() {
     Debug.Log("Resetting GameData");
     collectibles = 0;
-    lives = 3;
+    lives = 5;
     InitialCollectibles = 0;
   }
 

@@ -10,7 +10,21 @@ public class AutoTiling : MonoBehaviour {
   // Y tiling direction vs X tiling
   public bool YDirection = false;
   public void UpdateList() {
-    tiles = GameObject.FindGameObjectsWithTag(searchtag);
+    GameObject[] temptiles = GameObject.FindGameObjectsWithTag(searchtag);
+    int numtiles = 0;
+    for(int i=0; i<temptiles.Length; i++) {
+      if(temptiles[i].transform.parent == transform) {
+        numtiles++;
+      }
+    }
+    tiles = new GameObject[numtiles];
+    int j = 0;
+    for(int i=0; i<temptiles.Length; i++) {
+      if(temptiles[i].transform.parent == transform) {
+        tiles[j] = temptiles[i];
+        j++;
+      }
+    }
   }
   public void OnGUI() {
     Event e = Event.current;
@@ -30,9 +44,9 @@ public class AutoTiling : MonoBehaviour {
         Debug.Log("Tiling! " + YDirection);
         for(int i=0; i<tiles.Length; i++) {
           if(YDirection) {
-            tiles[i].transform.position = Vector2.up*i*multiplier;
+            tiles[i].transform.position = new Vector2(transform.position.x, transform.position.y+i*multiplier);
           } else {
-            tiles[i].transform.position = Vector2.right*i*multiplier;
+            tiles[i].transform.position = new Vector2(transform.position.x+i*multiplier, transform.position.y);
           }
         }
       }

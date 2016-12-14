@@ -5,7 +5,9 @@ public class ProjectileController : MonoBehaviour {
   public float speed = 1f;
   public float lifespan = 2f;
   public int AmmoCount = 10;
+  public GameObject hitSound;
   private float birthTime;
+  private bool naturalDeath = false;
   void Awake() {
     if(GameObject.FindGameObjectsWithTag("Projectile").Length > AmmoCount) {
       Destroy(gameObject);
@@ -23,7 +25,13 @@ public class ProjectileController : MonoBehaviour {
   }
   void Update() {
     if(Time.timeSinceLevelLoad - birthTime > lifespan) {
+      naturalDeath = true;
       Destroy(gameObject);
+    }
+  }
+  public void OnDestroy() {
+    if(!naturalDeath) {
+      Instantiate(hitSound);
     }
   }
 }

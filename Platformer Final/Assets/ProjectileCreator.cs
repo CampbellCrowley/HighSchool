@@ -6,6 +6,7 @@ public class ProjectileCreator : MonoBehaviour {
   public float size1 = 1f;
   public float size2 = 2f;
   public bool continuousShooting = false;
+  public GameObject sound;
   public void Update() {
     if(continuousShooting) {
       if (Input.GetAxis ("Fire1") >= 0.5) {
@@ -32,5 +33,6 @@ public class ProjectileCreator : MonoBehaviour {
               : (newProjectile.transform.localScale.x)),
            newProjectile.transform.localScale.y) * scale;
     newProjectile.GetComponent<Rigidbody2D>().velocity = transform.parent.GetComponent<Rigidbody2D>().velocity;
+    Instantiate(sound);
   }
 }

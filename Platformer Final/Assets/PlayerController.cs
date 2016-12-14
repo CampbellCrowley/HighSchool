@@ -44,8 +44,10 @@ class PlayerController : MonoBehaviour {
  public
   void Update() {
     text.text =
-        // GameData.collectibles + " Collectibles Collected of " + GameData.getNeededCollectibles();
-        GameData.collectibles + " Collectibles Collected";
+        GameData.collectibles + "/" + GameData.getNeededCollectibles() +
+          " Collectibles Collected\n" +
+          (10-GameObject.FindGameObjectsWithTag("Projectile").Length) + " Projectiles Remaining";
+        // GameData.collectibles + " Collectibles Collected";
     if(GameData.lives > 0) {
       lives.text = "Level " + GameData.GetLevel() + " || " + ((GameData.lives == 1)
           ? "LAST LIFE" : (GameData.lives + " Lives Remaining"));
@@ -173,7 +175,8 @@ class PlayerController : MonoBehaviour {
       Destroy(other.gameObject);
       GameData.IncrementCollectibles();
     } else if (other.gameObject.CompareTag("Exit")) {
-      GameData.NextLevel();
+      if(GameData.collectibles >= GameData.getNeededCollectibles())
+        GameData.NextLevel();
     } else if (!dead && other.gameObject.CompareTag("Enemy")) {
       dead = true;
       DeathTime = Time.timeSinceLevelLoad;
