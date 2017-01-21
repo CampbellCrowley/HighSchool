@@ -13,16 +13,20 @@ public class PlayerController : MonoBehaviour {
   private float endTime = 0f;
   public GUIText debug;
 
+  private bool isGrounded = false;
+
+  void Awake() {
+    Cursor.visible=false;
+  }
+
 	void Update () {
     Rigidbody rbody = GetComponent<Rigidbody>();
     float moveHorizontal = Input.GetAxis ("Horizontal");
 		float moveVertical = Input.GetAxis ("Vertical");
     float lookHorizontal = Input.GetAxis ("Mouse X");
     float lookVertical = Input.GetAxis ("Mouse Y");
-    bool isGrounded = Physics.SphereCast(transform.position, m_Capsule.radius * (1.0f - advancedSettings.shellOffset), Vector3.down, out hitInfo,
-                ((m_Capsule.height/2f) - m_Capsule.radius) + advancedSettings.groundCheckDistance, Physics.AllLayers, QueryTriggerInteraction.Ignore);
     bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded;
-    
+
     if(debug != null) {
       debug.text = "Horizontal: " + moveHorizontal
                     + "\nVertical: " + moveVertical
@@ -31,7 +35,7 @@ public class PlayerController : MonoBehaviour {
                     + "\nTime: " + Time.time;
     }
 
-    if(Time.time<2) {
+    if(Time.time<1.5) {
       moveHorizontal=0;
       moveVertical=0;
       jump=false;
@@ -51,10 +55,12 @@ public class PlayerController : MonoBehaviour {
     timer.text = timeRemaining_;
 
 		Vector3 movement = new Vector3 (moveHorizontal * moveSpeed, jump ? moveSpeed*jumpMultiplier : 0.0f, moveVertical * moveSpeed);
+    movement = Quaternion.Euler(0,Camera.transform.eulerAngles.y,0) * movement;
 
 		rbody.AddForce (movement);
+    transform.rotation = Quaternion.Euler(transform.eulerAngles.x, transform.eulerAngles.y+lookHorizontal, transform.eulerAngles.z);
 
-    Camera.transform.position = ((5f*Camera.transform.position + (transform.position + Vector3.back*distance + Vector3.up*distance))/6f) ;
+    Camera.transform.position = ((5f*Camera.transform.position + (transform.position + Vector3.left*distance*Mathf.Sin(Camera.transform.eulerAngles.y/180f*Mathf.PI) + Vector3.back*distance*Mathf.Cos(Camera.transform.eulerAngles.y/180f*Mathf.PI) + Vector3.up*distance*Mathf.Cos((Camera.transform.eulerAngles.x-45f)/180f*Mathf.PI)))/6f) ;
     Camera.transform.rotation = Quaternion.Euler(Camera.transform.eulerAngles.x-lookVertical, Camera.transform.eulerAngles.y+lookHorizontal, Camera.transform.eulerAngles.z);
 
     if (transform.position.y<0 && false) {
@@ -69,5 +75,11 @@ public class PlayerController : MonoBehaviour {
       Destroy(other.gameObject);
       GameData.collectedCollectibles++;
     }
+  }
+  void OnCollisionEnter(Collision other) {
+    isGrounded=true;
+  }
+  void OnCollisionExit(Collision other) {
+    isGrounded=false;
   }
 }
