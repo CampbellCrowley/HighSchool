@@ -13,6 +13,8 @@ class PlayerController : MonoBehaviour {
  public
   GameObject Camera;
  public
+  bool CameraDamping = false;
+ public
   GUIText timer;
  public
   GUIText collectedCounter;
@@ -80,14 +82,14 @@ class PlayerController : MonoBehaviour {
 
     Vector3 newCameraPos =
         transform.position +
-        Vector3.left * distance *
-            Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) +
-        Vector3.back * distance *
-            Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) +
-        Vector3.up * distance *
-            Mathf.Cos((Camera.transform.eulerAngles.x - 45f) / 180f * Mathf.PI);
+        (Vector3.left *
+            (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) - Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI)*Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)) +
+        Vector3.back *
+            (Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) - Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI)*Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI))  +
+        Vector3.up *
+            Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)) * distance;
     if(CameraDamping) {
-        ((5f * Camera.transform.position +
+        newCameraPos = ((5f * Camera.transform.position +
           newCameraPos) /
          6f);
     }
