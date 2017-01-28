@@ -15,6 +15,8 @@ class PlayerController : MonoBehaviour {
  public
   bool CameraDamping = false;
  public
+  bool rotateWithCamera = false;
+ public
   GUIText timer;
  public
   GUIText collectedCounter;
@@ -30,7 +32,7 @@ class PlayerController : MonoBehaviour {
 
   void Awake() { Cursor.visible = false; }
 
-  void Update() {
+  void FixedUpdate() {
     Rigidbody rbody = GetComponent<Rigidbody>();
     float moveHorizontal = Input.GetAxis("Horizontal");
     float moveVertical = Input.GetAxis("Vertical");
@@ -69,16 +71,28 @@ class PlayerController : MonoBehaviour {
       timer.text = timeRemaining_;
     }
 
-    Vector3 movement = new Vector3(moveHorizontal * moveSpeed,
-                                   jump ? moveSpeed * jumpMultiplier : 0.0f,
-                                   moveVertical * moveSpeed);
+    Vector3 movement = moveSpeed * Vector3.Slerp(moveHorizontal*Vector3.right, moveVertical*Vector3.forward, 0.5f) +
+                                   (jump ? moveSpeed * jumpMultiplier : 0.0f) * Vector3.up;
     movement =
         Quaternion.Euler(0, Camera.transform.eulerAngles.y, 0) * movement;
 
     rbody.AddForce(movement);
-    transform.rotation = Quaternion.Euler(
-        transform.eulerAngles.x, transform.eulerAngles.y + lookHorizontal,
-        transform.eulerAngles.z);
+    if(rotateWithCamera) {
+      transform.rotation = Quaternion.Euler(
+          transform.eulerAngles.x, transform.eulerAngles.y + lookHorizontal,
+          transform.eulerAngles.z);
+    } else {
+      Quaternion moveRotation = Quaternion.Euler(rbody.velocity.x, rbody.velocity.y,rbody.velocity.z);
+      float moveAngle = moveRotation.eulerAngles.y;
+
+      Debug.Log(rbody.velocity + " " + moveRotation.eulerAngles + " " + moveAngle);
+
+      rbody.transform.rotation = Quaternion.Euler(
+        0f,
+        Mathf.Lerp(rbody.transform.eulerAngles.y, moveAngle-rbody.transform.eulerAngles.y, 0.5f),
+        0f
+      );
+    }
 
     Vector3 newCameraPos =
         transform.position +
