@@ -82,16 +82,22 @@ class PlayerController : MonoBehaviour {
           transform.eulerAngles.x, transform.eulerAngles.y + lookHorizontal,
           transform.eulerAngles.z);
     } else {
-      Quaternion moveRotation = Quaternion.Euler(rbody.velocity.x, rbody.velocity.y,rbody.velocity.z);
-      float moveAngle = moveRotation.eulerAngles.y;
+      float moveAngle = Mathf.Atan(moveHorizontal/moveVertical)*180f/Mathf.PI;
+      if(moveAngle != moveAngle) {
+        moveAngle = 0f;
+      }
+      // if(moveHorizontal>0) moveAngle*=-1f;
+      if(moveVertical<0) moveAngle+=180f;
+      if(moveAngle < 0) moveAngle+=360f;
+      if(rbody.velocity.magnitude > 0.01) {
+        Debug.Log("Acc: " + rbody.velocity + " Dir: " + moveAngle + " -- " + rbody.transform.eulerAngles);
 
-      Debug.Log(rbody.velocity + " " + moveRotation.eulerAngles + " " + moveAngle);
-
-      rbody.transform.rotation = Quaternion.Euler(
-        0f,
-        Mathf.Lerp(rbody.transform.eulerAngles.y, moveAngle-rbody.transform.eulerAngles.y, 0.5f),
-        0f
-      );
+        rbody.transform.rotation = Quaternion.Euler(
+          0f,
+          Mathf.Lerp(rbody.transform.eulerAngles.y, moveAngle, 0.05f),
+          0f
+        );
+      }
     }
 
     Vector3 newCameraPos =
