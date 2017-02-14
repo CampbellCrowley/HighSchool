@@ -26,14 +26,27 @@ class PlayerController : MonoBehaviour {
   float endTime = 0f;
  public
   GUIText debug;
+ private Rigidbody rbody;
+ private
+  Animator anim;
+ private
+  float turn = 0f;
+ private
+  float forward = 0f;
+ private
+  float moveAngle = 0f;
 
  private
   bool isGrounded = false;
 
   void Awake() { Cursor.visible = false; }
 
+  void Start() {
+    anim = GetComponent<Animator>();
+    rbody = GetComponent<Rigidbody>();
+  }
+
   void FixedUpdate() {
-    Rigidbody rbody = GetComponent<Rigidbody>();
     float moveHorizontal = Input.GetAxis("Horizontal");
     float moveVertical = Input.GetAxis("Vertical");
     float lookHorizontal = Input.GetAxis("Mouse X");
@@ -74,60 +87,73 @@ class PlayerController : MonoBehaviour {
     Vector3 movement = moveSpeed *
                            Vector3.Slerp(moveHorizontal * Vector3.right,
                                          moveVertical * Vector3.forward, 0.5f) +
-                       (jump ? moveSpeed * jumpMultiplier
+                       (jump ? (moveSpeed * jumpMultiplier)
                              : (rbody.velocity.y - 9.81f * Time.deltaTime)) *
                            Vector3.up;
     movement =
         Quaternion.Euler(0, Camera.transform.eulerAngles.y, 0) * movement;
 
-    rbody.velocity = Vector3.Lerp(movement, rbody.velocity, 0.3f);
+    rbody.velocity = Vector3.Lerp(movement, rbody.velocity, 0.5f);
+    forward = movement.magnitude/5f;
     if (rotateWithCamera) {
       transform.rotation = Quaternion.Euler(
           transform.eulerAngles.x, transform.eulerAngles.y + lookHorizontal,
           transform.eulerAngles.z);
     } else {
-      float moveAngle =
-          Mathf.Atan(moveHorizontal / moveVertical) * 180f / Mathf.PI;
+      moveAngle = Mathf.Atan(moveHorizontal / moveVertical) * 180f / Mathf.PI;
       if (moveAngle != moveAngle) {
         moveAngle = 0f;
       }
-      // if(moveHorizontal>0) moveAngle*=-1f;
       if (moveVertical < 0) moveAngle += 180f;
-      if (rbody.velocity.magnitude > 0.01) {
-        Debug.Log("Acc: " + rbody.velocity + " Dir: " + moveAngle + " -- " +
-                  rbody.transform.eulerAngles);
-
+      if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
+          Mathf.Abs(rbody.velocity.z) > 0.01f) {
         moveAngle += Camera.transform.eulerAngles.y;
-        rbody.transform.rotation = Quaternion.Euler(
+        Quaternion rotation = Quaternion.Euler(
             0f,
-            Mathf.LerpAngle(rbody.transform.eulerAngles.y, moveAngle, 0.05f),
+            Mathf.LerpAngle(rbody.transform.eulerAngles.y, moveAngle, 0.07f),
             0f);
-        transform.rotation = rbody.transform.rotation;
+
+        rbody.transform.rotation = Quaternion.identity;
+        transform.rotation = rotation;
       }
     }
 
     Vector3 newCameraPos =
-        transform.position +
+        transform.position + Vector3.up +
         (Vector3.left *
              (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
               Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
-                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)) +
+                  Mathf.Sin((-45f + Camera.transform.eulerAngles.x) / 90f *
+                            Mathf.PI)) +
          Vector3.back *
              (Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
               Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
-                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)) +
+                  Mathf.Sin((-45f + Camera.transform.eulerAngles.x) / 90f *
+                            Mathf.PI)) +
          Vector3.up *
              Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)) *
             distance;
     if (CameraDamping) {
-      newCameraPos = ((5f * Camera.transform.position + newCameraPos) / 6f);
+      newCameraPos =
+          Vector3.Lerp(Camera.transform.position, newCameraPos, 0.15f);
     }
     Camera.transform.position = newCameraPos;
     Camera.transform.rotation =
         Quaternion.Euler(Camera.transform.eulerAngles.x - lookVertical,
                          Camera.transform.eulerAngles.y + lookHorizontal,
                          Camera.transform.eulerAngles.z);
+
   }
+   void OnAnimatorIK() {
+     if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
+         Mathf.Abs(rbody.velocity.z) > 0.01f) {
+       turn = (moveAngle - anim.bodyRotation.eulerAngles.y) / 180f;
+       while (turn < -1) turn += 2;
+       while (turn > 1) turn -= 2;
+     }
+    anim.SetFloat("Forward", forward);
+    anim.SetFloat("Turn", turn);
+   }
 
   void OnTriggerEnter(Collider other) {
     Debug.Log(other);
