@@ -35,9 +35,9 @@ class PlayerController : MonoBehaviour {
   float forward = 0f;
  private
   float moveAngle = 0f;
-
  private
   bool isGrounded = false;
+ private bool isCrouched = false;
 
   void Awake() { Cursor.visible = false; }
 
@@ -51,7 +51,12 @@ class PlayerController : MonoBehaviour {
     float moveVertical = Input.GetAxis("Vertical");
     float lookHorizontal = Input.GetAxis("Mouse X");
     float lookVertical = Input.GetAxis("Mouse Y");
-    bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded;
+    RaycastHit hitinfo;
+    Physics.SphereCast(transform.position, 0.05f, Vector3.down, out hitinfo);
+    isGrounded = hitinfo.distance < 0.05f;
+    isCrouched = Input.GetAxis("Crouch") > 0.5;
+    bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded && !isCrouched;
+    bool sprint = Input.GetAxis("Sprint") > 0.5 && !isCrouched && isGrounded;
 
     if (debug != null) {
       debug.text = "Horizontal: " + moveHorizontal + "\nVertical: " +
@@ -84,17 +89,28 @@ class PlayerController : MonoBehaviour {
       timer.text = timeRemaining_;
     }
 
-    Vector3 movement = moveSpeed *
-                           Vector3.Slerp(moveHorizontal * Vector3.right,
-                                         moveVertical * Vector3.forward, 0.5f) +
-                       (jump ? (moveSpeed * jumpMultiplier)
-                             : (rbody.velocity.y - 9.81f * Time.deltaTime)) *
-                           Vector3.up;
+    Vector3 movement =
+        moveHorizontal * Vector3.right + moveVertical * Vector3.forward;
+
+    Vector3.ClampMagnitude(movement, 1.0f);
+    if (isCrouched) {
+      movement *= moveSpeed * 0.5f;
+      forward = movement.magnitude / 3.5f;
+    } else if(sprint) {
+      movement *= moveSpeed * 2.0f;
+      forward = movement.magnitude / 5f;
+    } else {
+      movement *= moveSpeed * 1.0f;
+      forward = movement.magnitude / 5f;
+    }
+
+    movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
+                 (rbody.velocity.y - 9.81f * Time.deltaTime)) *
+                Vector3.up;
     movement =
         Quaternion.Euler(0, Camera.transform.eulerAngles.y, 0) * movement;
 
     rbody.velocity = Vector3.Lerp(movement, rbody.velocity, 0.5f);
-    forward = movement.magnitude/5f;
     if (rotateWithCamera) {
       transform.rotation = Quaternion.Euler(
           transform.eulerAngles.x, transform.eulerAngles.y + lookHorizontal,
@@ -142,18 +158,19 @@ class PlayerController : MonoBehaviour {
         Quaternion.Euler(Camera.transform.eulerAngles.x - lookVertical,
                          Camera.transform.eulerAngles.y + lookHorizontal,
                          Camera.transform.eulerAngles.z);
-
   }
-   void OnAnimatorIK() {
-     if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
-         Mathf.Abs(rbody.velocity.z) > 0.01f) {
-       turn = (moveAngle - anim.bodyRotation.eulerAngles.y) / 180f;
-       while (turn < -1) turn += 2;
-       while (turn > 1) turn -= 2;
-     }
-    anim.SetFloat("Forward", forward);
+  void OnAnimatorIK() {
+    if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
+        Mathf.Abs(rbody.velocity.z) > 0.01f) {
+      turn = (moveAngle - anim.bodyRotation.eulerAngles.y) / 180f;
+      while (turn < -1) turn += 2;
+      while (turn > 1) turn -= 2;
+    }
+    anim.SetFloat("Forward", forward * 1.1f);
     anim.SetFloat("Turn", turn);
-   }
+    anim.SetBool("OnGround", isGrounded);
+    anim.SetBool("Crouch", isCrouched);
+  }
 
   void OnTriggerEnter(Collider other) {
     Debug.Log(other);
@@ -162,6 +179,4 @@ class PlayerController : MonoBehaviour {
       GameData.collectedCollectibles++;
     }
   }
-  void OnCollisionEnter(Collision other) { isGrounded = true; }
-  void OnCollisionExit(Collision other) { isGrounded = false; }
 }
