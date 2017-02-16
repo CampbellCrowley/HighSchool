@@ -13,4 +13,5 @@ public class GameData : MonoBehaviour {
     }
   }
   public static int collectedCollectibles = 0;
+  public static int health = 10;
 }

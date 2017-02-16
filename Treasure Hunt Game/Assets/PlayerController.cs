@@ -17,16 +17,19 @@ class PlayerController : MonoBehaviour {
  public
   bool rotateWithCamera = false;
  public
-  GUIText timer;
- public
   GUIText collectedCounter;
+ public
+  GUIText lifeCounter;
+ public
+  GUIText timer;
  public
   float GameTime = 10f;
  private
   float endTime = 0f;
  public
   GUIText debug;
- private Rigidbody rbody;
+ private
+  Rigidbody rbody;
  private
   Animator anim;
  private
@@ -37,7 +40,8 @@ class PlayerController : MonoBehaviour {
   float moveAngle = 0f;
  private
   bool isGrounded = false;
- private bool isCrouched = false;
+ private
+  bool isCrouched = false;
 
   void Awake() { Cursor.visible = false; }
 
@@ -52,7 +56,7 @@ class PlayerController : MonoBehaviour {
     float lookHorizontal = Input.GetAxis("Mouse X");
     float lookVertical = Input.GetAxis("Mouse Y");
     RaycastHit hitinfo;
-    Physics.SphereCast(transform.position, 0.05f, Vector3.down, out hitinfo);
+    Physics.SphereCast(transform.position, 0.1f, Vector3.down, out hitinfo);
     isGrounded = hitinfo.distance < 0.05f;
     isCrouched = Input.GetAxis("Crouch") > 0.5;
     bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded && !isCrouched;
@@ -74,7 +78,10 @@ class PlayerController : MonoBehaviour {
     }
     if (collectedCounter != null) {
       collectedCounter.text =
-          GameData.collectedCollectibles + " collected collectibles";
+          GameData.collectedCollectibles + " Items";
+    }
+    if (lifeCounter != null) {
+      lifeCounter.text = GameData.health + " Health";
     }
     if (timer != null) {
       float timeRemaining = Mathf.Round((endTime - Time.time) * 10f) / 10f;
@@ -95,9 +102,9 @@ class PlayerController : MonoBehaviour {
     Vector3.ClampMagnitude(movement, 1.0f);
     if (isCrouched) {
       movement *= moveSpeed * 0.5f;
-      forward = movement.magnitude / 3.5f;
+      forward = movement.magnitude / 3.2f;
     } else if(sprint) {
-      movement *= moveSpeed * 2.0f;
+      movement *= moveSpeed * 2.5f;
       forward = movement.magnitude / 5f;
     } else {
       movement *= moveSpeed * 1.0f;
@@ -135,7 +142,7 @@ class PlayerController : MonoBehaviour {
     }
 
     Vector3 newCameraPos =
-        transform.position + Vector3.up +
+        transform.position + Vector3.up * 3f +
         (Vector3.left *
              (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
               Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
@@ -174,9 +181,13 @@ class PlayerController : MonoBehaviour {
 
   void OnTriggerEnter(Collider other) {
     Debug.Log(other);
-    if (other.gameObject.CompareTag("Collectible") && endTime > Time.time) {
+    if (other.gameObject.CompareTag("Collectible") &&
+        (endTime > Time.time || timer == null)) {
       Destroy(other.gameObject);
       GameData.collectedCollectibles++;
+    } else if (other.gameObject.CompareTag("Enemy")) {
+      GameData.health--;
+      other.gameObject.transform.position += Vector3.up * 5f;
     }
   }
 }
