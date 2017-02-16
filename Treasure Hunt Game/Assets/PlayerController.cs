@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityStandardAssets.ImageEffects;
 
 public
 class PlayerController : MonoBehaviour {
@@ -9,11 +10,15 @@ class PlayerController : MonoBehaviour {
  public
   float jumpMultiplier = 5f;
  public
-  float distance = 5f;
+  float MaxCameraDistance = 3f;
+ private
+  float CurrentCameraDistance = 3f;
  public
   GameObject Camera;
  public
   bool CameraDamping = false;
+ public
+  bool CameraObjectAvoidance = true;
  public
   bool rotateWithCamera = false;
  public
@@ -42,12 +47,15 @@ class PlayerController : MonoBehaviour {
   bool isGrounded = false;
  private
   bool isCrouched = false;
+ private
+  Color startColor;
 
   void Awake() { Cursor.visible = false; }
 
   void Start() {
     anim = GetComponent<Animator>();
     rbody = GetComponent<Rigidbody>();
+    startColor = RenderSettings.fogColor;
   }
 
   void FixedUpdate() {
@@ -141,21 +149,38 @@ class PlayerController : MonoBehaviour {
       }
     }
 
+    if (CameraObjectAvoidance) {
+      RaycastHit hit;
+      Physics.Linecast(transform.position + Vector3.up * 2.5f,
+                       Camera.transform.position, out hit);
+      if (hit.transform != Camera.transform && hit.transform != transform &&
+          hit.transform != null) {
+        CurrentCameraDistance = hit.distance;
+      } else {
+        CurrentCameraDistance += 1.0f * Time.deltaTime;
+        if (CurrentCameraDistance > MaxCameraDistance) {
+          CurrentCameraDistance = MaxCameraDistance;
+        }
+      }
+    }
+
     Vector3 newCameraPos =
-        transform.position + Vector3.up * 3f +
-        (Vector3.left *
-             (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
-              Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
-                  Mathf.Sin((-45f + Camera.transform.eulerAngles.x) / 90f *
-                            Mathf.PI)) +
-         Vector3.back *
-             (Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
-              Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
-                  Mathf.Sin((-45f + Camera.transform.eulerAngles.x) / 90f *
-                            Mathf.PI)) +
-         Vector3.up *
-             Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)) *
-            distance;
+        transform.position + Vector3.up * 2.5f +
+        Vector3.ClampMagnitude(
+            (Vector3.left *
+                 (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
+                  Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
+                      Mathf.Sin((-45f + Camera.transform.eulerAngles.x) / 90f *
+                                Mathf.PI)) +
+             Vector3.back *
+                 (Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
+                  Mathf.Cos(Camera.transform.eulerAngles.y / 180f * Mathf.PI) *
+                      Mathf.Sin((-45f + Camera.transform.eulerAngles.x) / 90f *
+                                Mathf.PI)) +
+             Vector3.up *
+                 Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)),
+            1.0f) *
+            CurrentCameraDistance;
     if (CameraDamping) {
       newCameraPos =
           Vector3.Lerp(Camera.transform.position, newCameraPos, 0.15f);
@@ -163,8 +188,38 @@ class PlayerController : MonoBehaviour {
     Camera.transform.position = newCameraPos;
     Camera.transform.rotation =
         Quaternion.Euler(Camera.transform.eulerAngles.x - lookVertical,
-                         Camera.transform.eulerAngles.y + lookHorizontal,
-                         Camera.transform.eulerAngles.z);
+                         Camera.transform.eulerAngles.y + lookHorizontal, 0);
+
+    Debug.Log(Camera.transform.eulerAngles.x);
+    if (Camera.transform.eulerAngles.x > 75.0f &&
+        Camera.transform.eulerAngles.x < 90.0f) {
+      Camera.transform.rotation =
+          Quaternion.Euler(75.0f, Camera.transform.eulerAngles.y, 0f);
+    } else if (Camera.transform.eulerAngles.x < 360f - 75.0f &&
+               Camera.transform.eulerAngles.x > 90.0f) {
+      Camera.transform.rotation =
+          Quaternion.Euler(-75.0f, Camera.transform.eulerAngles.y, 0f);
+    }
+
+    float vignette = 0.0f;
+    GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+    float enemydistance = 100f;
+    for (int i = 0; i < enemies.Length; i++) {
+      float tempdist =
+          (enemies[i].transform.position - transform.position).magnitude;
+      if (tempdist < enemydistance) {
+        enemydistance = tempdist;
+      }
+    }
+    vignette = 0.45f - (enemydistance / 50f);
+    if (vignette >= 0) {
+      Camera.GetComponent<VignetteAndChromaticAberration>().intensity =
+          vignette;
+      RenderSettings.fogStartDistance = 200 * (1 - (vignette / 0.45f));
+      RenderSettings.fogEndDistance = 300 * (1 - (vignette / 0.45f));
+      RenderSettings.fogColor =
+          Color.Lerp(startColor, Color.red, (vignette / 0.45f));
+    }
   }
   void OnAnimatorIK() {
     if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
