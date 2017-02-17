@@ -68,7 +68,7 @@ class PlayerController : MonoBehaviour {
     isGrounded = hitinfo.distance < 0.05f;
     isCrouched = Input.GetAxis("Crouch") > 0.5;
     bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded && !isCrouched;
-    bool sprint = Input.GetAxis("Sprint") > 0.5 && !isCrouched && isGrounded;
+    bool sprint = Input.GetAxis("Sprint") > 0.5 && !isCrouched;
 
     if (debug != null) {
       debug.text = "Horizontal: " + moveHorizontal + "\nVertical: " +
@@ -116,7 +116,7 @@ class PlayerController : MonoBehaviour {
       forward = movement.magnitude / 5f;
     } else {
       movement *= moveSpeed * 1.0f;
-      forward = movement.magnitude / 5f;
+      forward = movement.magnitude / 6f;
     }
 
     movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
@@ -151,7 +151,7 @@ class PlayerController : MonoBehaviour {
 
     if (CameraObjectAvoidance) {
       RaycastHit hit;
-      Physics.Linecast(transform.position + Vector3.up * 2.5f,
+      Physics.Linecast(transform.position + Vector3.up * 2f,
                        Camera.transform.position, out hit);
       if (hit.transform != Camera.transform && hit.transform != transform &&
           hit.transform != null) {
@@ -165,7 +165,7 @@ class PlayerController : MonoBehaviour {
     }
 
     Vector3 newCameraPos =
-        transform.position + Vector3.up * 2.5f +
+        transform.position + Vector3.up * 2f +
         Vector3.ClampMagnitude(
             (Vector3.left *
                  (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
@@ -190,7 +190,6 @@ class PlayerController : MonoBehaviour {
         Quaternion.Euler(Camera.transform.eulerAngles.x - lookVertical,
                          Camera.transform.eulerAngles.y + lookHorizontal, 0);
 
-    Debug.Log(Camera.transform.eulerAngles.x);
     if (Camera.transform.eulerAngles.x > 75.0f &&
         Camera.transform.eulerAngles.x < 90.0f) {
       Camera.transform.rotation =
@@ -243,6 +242,10 @@ class PlayerController : MonoBehaviour {
     } else if (other.gameObject.CompareTag("Enemy")) {
       GameData.health--;
       other.gameObject.transform.position += Vector3.up * 5f;
+    } else if (other.gameObject.CompareTag("Portal")) {
+      if(GameData.levelComplete()) {
+        GameData.nextLevel();
+      }
     }
   }
 }

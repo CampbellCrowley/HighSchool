@@ -14,4 +14,13 @@ public class GameData : MonoBehaviour {
   }
   public static int collectedCollectibles = 0;
   public static int health = 10;
+  private static int neededCollectibles = 3;
+
+  public
+   static bool levelComplete() {
+     return collectedCollectibles >= neededCollectibles;
+   }
+  public static void nextLevel() {
+    Debug.Log("Next Level!");
+  }
 }
