@@ -234,7 +234,6 @@ class PlayerController : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider other) {
-    Debug.Log(other);
     if (other.gameObject.CompareTag("Collectible") &&
         (endTime > Time.time || timer == null)) {
       Destroy(other.gameObject);

@@ -15,9 +15,9 @@
 // #define DEBUG_SEED
 // #define DEBUG_STEEPNESS
 // #define DEBUG_UPDATES
-#define DEBUG_HUD_POS
-#define DEBUG_HUD_TIMES
-#define DEBUG_HUD_LOADED
+// #define DEBUG_HUD_POS
+// #define DEBUG_HUD_TIMES
+// #define DEBUG_HUD_LOADED
 #pragma warning disable 0168
 
 using UnityEngine;
@@ -192,6 +192,8 @@ public class TerrainGenerator : MonoBehaviour {
   float highest = 0.0f;
   // List of chunks loaded as a list of coordinates.
   String LoadedChunkList = "";
+
+  void Awake() { Debug.Log("Terrain Generator Enabled!"); }
 
   void Start() {
     for (int i = 0; i < times.DeltaTotalAverageArray.Length; i++) {
@@ -571,7 +573,9 @@ public class TerrainGenerator : MonoBehaviour {
       }
     }
 
+#if DEBUG_HUD_LOADED
     chunkListInfo.text = LoadedChunkList;
+#endif
 
     // Figure out timings and averages.
     if (iTime > -1) {
@@ -703,15 +707,17 @@ public class TerrainGenerator : MonoBehaviour {
 
       // Add Water
       iTime2 = Time.realtimeSinceStartup;
-      Vector3 terrVector3 = terrains[terrains.Count - 1]
-                                .terrList.GetComponent<Terrain>()
-                                .transform.position;
-      Vector3 waterVector3 = terrVector3;
-      waterVector3.y += 150;
-      waterVector3.x += terrWidth / 2;
-      waterVector3.z += terrLength / 2;
-      Instantiate(waterTile, waterVector3, Quaternion.identity,
-                  terrains[terrains.Count - 1].terrList.transform);
+      if (waterTile != null) {
+        Vector3 terrVector3 = terrains[terrains.Count - 1]
+                                  .terrList.GetComponent<Terrain>()
+                                  .transform.position;
+        Vector3 waterVector3 = terrVector3;
+        waterVector3.y += 150;
+        waterVector3.x += terrWidth / 2;
+        waterVector3.z += terrLength / 2;
+        Instantiate(waterTile, waterVector3, Quaternion.identity,
+                    terrains[terrains.Count - 1].terrList.transform);
+      }
       times.DeltaGenerateWater =
           (int)Math.Ceiling((Time.realtimeSinceStartup - iTime2) * 1000);
 
@@ -1662,6 +1668,27 @@ public class TerrainGenerator : MonoBehaviour {
                                     GenMode.mixtureAmount);
       }
       return output;
+    }
+  }
+ public
+  void movePlayerToTop() {
+    // Make sure the player stays above the terrain
+    int xCenter = Mathf.RoundToInt(
+        (player.transform.position.x - terrWidth / 2) / terrWidth);
+    int yCenter = Mathf.RoundToInt(
+        (player.transform.position.z - terrLength / 2) / terrLength);
+    int radius = Mathf.RoundToInt(loadDist / ((terrWidth + terrLength) / 2.0f));
+    int terrLoc = GetTerrainWithCoord(xCenter, yCenter);
+    if (terrLoc != -1) {
+      float TerrainHeight =
+          terrains[terrLoc].terrList.GetComponent<Terrain>().SampleHeight(
+              player.transform.position);
+
+      if (player != null) {
+        (player.GetComponent<InitPlayer>())
+            .updatePosition(player.transform.position.x, TerrainHeight,
+                            player.transform.position.z);
+      }
     }
   }
 }
