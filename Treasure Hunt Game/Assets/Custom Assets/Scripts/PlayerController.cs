@@ -4,35 +4,48 @@ using UnityEngine;
 using UnityStandardAssets.ImageEffects;
 
 public
-class PlayerController : MonoBehaviour {
- public
-  float moveSpeed = 5f;
- public
-  float jumpMultiplier = 5f;
- public
-  float MaxCameraDistance = 3f;
- private
-  float CurrentCameraDistance = 3f;
- public
-  GameObject Camera;
- public
-  bool CameraDamping = false;
- public
-  bool CameraObjectAvoidance = true;
- public
-  bool rotateWithCamera = false;
- public
-  GUIText collectedCounter;
- public
-  GUIText lifeCounter;
- public
-  GUIText timer;
- public
-  float GameTime = 10f;
+ class PlayerController : MonoBehaviour {
+  [System.Serializable] public class Sounds {
+    public
+     AudioPlayer Player;
+    public
+     AudioClip JumpSound;
+    public
+     AudioClip LandSound;
+    public
+     AudioClip[] FootSteps;
+   }
+
+   public float moveSpeed = 5f;
+  public
+   float jumpMultiplier = 5f;
+  public
+   float MaxCameraDistance = 3f;
+  private
+   float CurrentCameraDistance = 3f;
+  public
+   GameObject Camera;
+  public
+   bool CameraDamping = false;
+  public
+   bool CameraObjectAvoidance = true;
+  public
+   bool rotateWithCamera = false;
+  public
+   GUIText collectedCounter;
+  public
+   GUIText lifeCounter;
+  public
+   GUIText timer;
+  public
+   float GameTime = 10f;
+  public
+   GUIText debug;
+  public
+   Sounds sounds;
+
  private
   float endTime = 0f;
- public
-  GUIText debug;
  private
   Rigidbody rbody;
  private
@@ -51,13 +64,23 @@ class PlayerController : MonoBehaviour {
   bool isSprinting = false;
  private
   Color startColor;
+ private
+  float lastGroundedTime = 0f;
 
-  void Awake() { Cursor.visible = false; }
+  void Awake() {
+    sounds.LandSound.LoadAudioData();
+    sounds.JumpSound.LoadAudioData();
+    foreach (AudioClip step in sounds.FootSteps) {
+      step.LoadAudioData();
+    }
+  }
 
   void Start() {
+    Cursor.visible = false;
     anim = GetComponent<Animator>();
     rbody = GetComponent<Rigidbody>();
     startColor = RenderSettings.fogColor;
+    lastGroundedTime = Time.time;
   }
 
   void FixedUpdate() {
@@ -66,17 +89,12 @@ class PlayerController : MonoBehaviour {
     float lookHorizontal = Input.GetAxis("Mouse X");
     float lookVertical = Input.GetAxis("Mouse Y");
     RaycastHit hitinfo;
-    Physics.SphereCast(transform.position, 10.0f, Vector3.down, out hitinfo);
-    isGrounded = hitinfo.distance <= 0.25f;
-
-    if (hitinfo.transform != null)
-      Debug.Log(hitinfo.transform + " " + hitinfo.distance);
-
+    isGrounded = Physics.SphereCast(transform.position + Vector3.up * 0.01f,
+                                    0.0f, Vector3.down, out hitinfo, 0.22f);
     isCrouched = Input.GetAxis("Crouch") > 0.5;
     bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded && !isCrouched;
-    bool sprint = (Input.GetAxis("Sprint") > 0.5 && !isCrouched) ||
+    isSprinting = (Input.GetAxis("Sprint") > 0.5 && !isCrouched) ||
                   (isSprinting && !isGrounded);
-    isSprinting = sprint;
 
     if (debug != null) {
       debug.text = "Horizontal: " + moveHorizontal + "\nVertical: " +
@@ -121,7 +139,7 @@ class PlayerController : MonoBehaviour {
     if (isCrouched) {
       movement *= moveSpeed * 0.5f;
       forward = movement.magnitude / 3.2f;
-    } else if(sprint) {
+    } else if(isSprinting) {
       movement *= moveSpeed * 2.5f;
       forward = movement.magnitude / 5f;
     } else {
@@ -229,6 +247,13 @@ class PlayerController : MonoBehaviour {
       RenderSettings.fogColor =
           Color.Lerp(startColor, Color.red, (vignette / 0.45f));
     }
+
+    if (isGrounded && Time.time - lastGroundedTime >= 0.05f) {
+      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      player.clip = sounds.LandSound;
+    }
+
+    if (isGrounded) lastGroundedTime = Time.time;
   }
   void OnAnimatorIK() {
     if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
@@ -239,7 +264,9 @@ class PlayerController : MonoBehaviour {
     }
     anim.SetFloat("Forward", forward * 1.1f);
     anim.SetFloat("Turn", turn);
-    anim.SetBool("OnGround", isGrounded);
+    anim.SetFloat("Jump", -9 + (Time.time - lastGroundedTime) * 9f);
+    anim.SetFloat("JumpLeg", -1 + (Time.time - lastGroundedTime) * 4f);
+    anim.SetBool("OnGround", (Time.time - lastGroundedTime <= 0.05f));
     anim.SetBool("Crouch", isCrouched);
   }
 

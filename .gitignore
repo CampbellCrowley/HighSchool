@@ -1,6 +1,8 @@
 GitIgnore/
 Library/
 /Library
+*/Temp/*
+*/Executables/*
 *.swp
 *.swo
 *.sln
