@@ -48,6 +48,8 @@ class PlayerController : MonoBehaviour {
  private
   bool isCrouched = false;
  private
+  bool isSprinting = false;
+ private
   Color startColor;
 
   void Awake() { Cursor.visible = false; }
@@ -64,11 +66,17 @@ class PlayerController : MonoBehaviour {
     float lookHorizontal = Input.GetAxis("Mouse X");
     float lookVertical = Input.GetAxis("Mouse Y");
     RaycastHit hitinfo;
-    Physics.SphereCast(transform.position, 0.1f, Vector3.down, out hitinfo);
-    isGrounded = hitinfo.distance < 0.05f;
+    Physics.SphereCast(transform.position, 10.0f, Vector3.down, out hitinfo);
+    isGrounded = hitinfo.distance <= 0.25f;
+
+    if (hitinfo.transform != null)
+      Debug.Log(hitinfo.transform + " " + hitinfo.distance);
+
     isCrouched = Input.GetAxis("Crouch") > 0.5;
     bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded && !isCrouched;
-    bool sprint = Input.GetAxis("Sprint") > 0.5 && !isCrouched;
+    bool sprint = (Input.GetAxis("Sprint") > 0.5 && !isCrouched) ||
+                  (isSprinting && !isGrounded);
+    isSprinting = sprint;
 
     if (debug != null) {
       debug.text = "Horizontal: " + moveHorizontal + "\nVertical: " +
@@ -79,6 +87,8 @@ class PlayerController : MonoBehaviour {
     if (Time.time < 1.5) {
       moveHorizontal = 0;
       moveVertical = 0;
+      lookHorizontal = 0;
+      lookVertical = 0;
       jump = false;
     }
     if (!(moveHorizontal == 0 && moveVertical == 0 && !jump) && endTime == 0f) {
@@ -234,6 +244,7 @@ class PlayerController : MonoBehaviour {
   }
 
   void OnTriggerEnter(Collider other) {
+    Debug.Log(other);
     if (other.gameObject.CompareTag("Collectible") &&
         (endTime > Time.time || timer == null)) {
       Destroy(other.gameObject);
