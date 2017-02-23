@@ -190,8 +190,10 @@ public class TerrainGenerator : MonoBehaviour {
   // Lowest and highest points of loaded terrain.
   float lowest = 1.0f;
   float highest = 0.0f;
+#if DEBUG_HUD_LOADED
   // List of chunks loaded as a list of coordinates.
   String LoadedChunkList = "";
+#endif
 
   void Awake() { Debug.Log("Terrain Generator Enabled!"); }
 
@@ -1677,7 +1679,6 @@ public class TerrainGenerator : MonoBehaviour {
         (player.transform.position.x - terrWidth / 2) / terrWidth);
     int yCenter = Mathf.RoundToInt(
         (player.transform.position.z - terrLength / 2) / terrLength);
-    int radius = Mathf.RoundToInt(loadDist / ((terrWidth + terrLength) / 2.0f));
     int terrLoc = GetTerrainWithCoord(xCenter, yCenter);
     if (terrLoc != -1) {
       float TerrainHeight =

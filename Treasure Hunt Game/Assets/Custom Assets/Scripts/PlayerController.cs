@@ -68,10 +68,10 @@ public
   float lastGroundedTime = 0f;
 
   void Awake() {
-    sounds.LandSound.LoadAudioData();
-    sounds.JumpSound.LoadAudioData();
+    if (sounds.LandSound != null) sounds.LandSound.LoadAudioData();
+    if (sounds.JumpSound != null) sounds.JumpSound.LoadAudioData();
     foreach (AudioClip step in sounds.FootSteps) {
-      step.LoadAudioData();
+      if (step != null) step.LoadAudioData();
     }
   }
 
@@ -160,7 +160,7 @@ public
           transform.eulerAngles.z);
     } else {
       moveAngle = Mathf.Atan(moveHorizontal / moveVertical) * 180f / Mathf.PI;
-      if (moveAngle != moveAngle) {
+      if (!(moveAngle >= 0 || moveAngle < 0)) {
         moveAngle = 0f;
       }
       if (moveVertical < 0) moveAngle += 180f;
@@ -248,9 +248,10 @@ public
           Color.Lerp(startColor, Color.red, (vignette / 0.45f));
     }
 
-    if (isGrounded && Time.time - lastGroundedTime >= 0.05f) {
+    if (isGrounded && Time.time - lastGroundedTime >= 0.05f &&
+        sounds.Player != null) {
       AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-      player.clip = sounds.LandSound;
+      if (sounds.LandSound != null) player.clip = sounds.LandSound;
     }
 
     if (isGrounded) lastGroundedTime = Time.time;
