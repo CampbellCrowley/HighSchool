@@ -26,6 +26,15 @@ public class GameData : MonoBehaviour {
     Debug.Log("Next Level!");
     SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
   }
+  public static void restartLevel() {
+    Debug.Log("Restarting Level!");
+    collectedCollectibles = 0;
+    SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+  }
+  public static void MainMenu() {
+    Debug.Log("Menu!");
+    SceneManager.LoadScene(0);
+  }
   public static void Settings() {
     Debug.Log("Settings");
   }

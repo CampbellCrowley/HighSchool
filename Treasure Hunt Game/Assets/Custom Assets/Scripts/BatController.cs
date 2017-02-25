@@ -23,7 +23,7 @@ class BatController : MonoBehaviour {
     anim = GetComponent<Animator>();
   }
 
-  void FixedUpdate() {
+  void Update() {
     if (!tutorial) {
       transform.rotation = Quaternion.identity;
 

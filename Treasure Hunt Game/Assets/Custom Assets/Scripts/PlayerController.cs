@@ -13,6 +13,12 @@ class PlayerController : MonoBehaviour {
    public
     AudioClip LandSound;
    public
+    AudioClip CollectibleSound;
+   public
+    AudioClip Pain;
+   public
+    AudioClip LevelFail;
+   public
     AudioClip[] FootSteps;
   }
 
@@ -51,12 +57,20 @@ class PlayerController : MonoBehaviour {
   float staminaCountBars = 20f;
  public
   GUIText debug;
- [Header("Look and Sound")]
+  [Header("Look and Sound")]
+ public
+  float footstepSize = 0.5f;
+ public
+  float footstepSizeCrouched = 0.7f;
+ public
+  float footstepSizeSprinting = 0.3f;
  public
   Sounds sounds;
  [Header("Misc.")]
  public
   float GameTime = 10f;
+ public
+  GameObject Ragdoll;
 
  private
   Rigidbody rbody;
@@ -81,7 +95,11 @@ class PlayerController : MonoBehaviour {
  private
   bool isSprinting = false;
  private
+  bool isDead = false;
+ private
   float endTime = 0f;
+ private
+  float levelStartTime = 0f;
  private
   float lastGroundedTime = 0f;
  private
@@ -90,6 +108,10 @@ class PlayerController : MonoBehaviour {
   float staminaRemaining = 1.0f;
  private
   float lastJumpSoundTimejump = 0.0f;
+ private
+  float lastFootstepTime = 0.0f;
+ private
+  float deathTime = 0.0f;
 
   void Awake() {
     if (sounds.LandSound != null) sounds.LandSound.LoadAudioData();
@@ -101,10 +123,27 @@ class PlayerController : MonoBehaviour {
   }
 
   void Start() {
+    UnDead();
+
     anim = GetComponent<Animator>();
     rbody = GetComponent<Rigidbody>();
+
     startColor = RenderSettings.fogColor;
+
+    levelStartTime = Time.time;
     lastGroundedTime = Time.time;
+    lastSprintTime = Time.time;
+    lastJumpSoundTimejump = Time.time;
+    lastFootstepTime = Time.time;
+  }
+
+  void Update() {
+    if (isDead && Time.realtimeSinceStartup - deathTime >= 5f) {
+      if (GameData.health > 0)
+        GameData.restartLevel();
+      else
+        GameData.MainMenu();
+    }
   }
 
   void FixedUpdate() {
@@ -129,7 +168,7 @@ class PlayerController : MonoBehaviour {
     }
 
     // Prevent movement in first 1.5 seconds of the level.
-    if (Time.time < 1.5) {
+    if (Time.time - levelStartTime < 1.5 || isDead) {
       moveHorizontal = 0;
       moveVertical = 0;
       lookHorizontal = 0;
@@ -235,7 +274,8 @@ class PlayerController : MonoBehaviour {
     if (CameraObjectAvoidance) {
       RaycastHit hit;
       Physics.Linecast(transform.position + Vector3.up * 2f,
-                       Camera.transform.position, out hit);
+                       Camera.transform.position, out hit,
+                       ~LayerMask.GetMask("Enemy"));
       if (hit.transform != Camera.transform && hit.transform != transform &&
           hit.transform != null) {
         CurrentCameraDistance = hit.distance;
@@ -307,17 +347,87 @@ class PlayerController : MonoBehaviour {
     if (isGrounded && Time.time - lastGroundedTime >= 0.05f &&
         sounds.Player != null) {
       AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-      if (sounds.LandSound != null) player.clip = sounds.LandSound;
+      if (sounds.LandSound != null) {
+        player.clip = sounds.LandSound;
+      } else {
+        Destroy(player.gameObject);
+      }
     }
     if (jump && Time.time - lastJumpSoundTimejump >= 0.5f &&
         sounds.Player != null) {
       AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-      if (sounds.JumpSound != null) player.clip = sounds.JumpSound;
+      if (sounds.JumpSound != null) {
+        player.clip = sounds.JumpSound;
+      } else {
+        Destroy(player.gameObject);
+      }
       lastJumpSoundTimejump = Time.time;
+    }
+    if (isGrounded && (moveVertical != 0 || moveHorizontal != 0) &&
+        sounds.Player != null) {
+      if ((isSprinting &&
+           Time.time - lastFootstepTime >= footstepSizeSprinting) ||
+          (isCrouched &&
+           Time.time - lastFootstepTime >= footstepSizeCrouched) ||
+          (!isSprinting && !isCrouched &&
+           Time.time - lastFootstepTime >= footstepSize)) {
+        lastFootstepTime = Time.time;
+        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+        AudioClip footstepSound =
+            sounds.FootSteps[(int)Random.Range(0, sounds.FootSteps.Length)];
+        if (footstepSound != null) {
+          player.clip = footstepSound;
+          player.volume = 0.3f;
+        } else {
+          Destroy(player.gameObject);
+        }
+      }
     }
 
     if (isGrounded) lastGroundedTime = Time.time;
   }
+
+  void Dead() {
+    isDead = true;
+    if (GameData.health <= 0) {
+      if (sounds.Player != null) {
+        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+        if (sounds.LevelFail != null)
+          player.clip = sounds.LevelFail;
+        else
+          Destroy(player.gameObject);
+      }
+    } else {
+      if (sounds.Player != null) {
+        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+        if (sounds.Pain != null)
+          player.clip = sounds.Pain;
+        else
+          Destroy(player.gameObject);
+      }
+    }
+    deathTime = Time.realtimeSinceStartup;
+    Time.timeScale = 0.3f;
+    Time.fixedDeltaTime = 0.02f * Time.timeScale;
+    GetComponent<Rigidbody>().isKinematic = true;
+    if(Ragdoll != null) {
+      Ragdoll.SetActive(true);
+      Ragdoll.transform.position = transform.position;
+      Ragdoll.transform.rotation = transform.rotation;
+      foreach (SkinnedMeshRenderer renderer in
+                   GetComponentsInChildren<SkinnedMeshRenderer>()) {
+        renderer.enabled = false;
+      }
+      GetComponent<CapsuleCollider>().enabled = false;
+      GetComponent<Animator>().enabled = false;
+      // Camera.transform.eulerAngles = new Vector3(85f, 0, 0);
+    }
+  }
+  void UnDead() {
+    Time.timeScale = 1.0f;
+    Time.fixedDeltaTime = 0.02f * Time.timeScale;
+  }
+
   void OnAnimatorIK() {
     if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
         Mathf.Abs(rbody.velocity.z) > 0.01f) {
@@ -339,9 +449,17 @@ class PlayerController : MonoBehaviour {
         (endTime > Time.time || timer == null)) {
       Destroy(other.gameObject);
       GameData.collectedCollectibles++;
+      if (sounds.Player != null) {
+        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+        if (sounds.CollectibleSound != null)
+          player.clip = sounds.CollectibleSound;
+        else
+          Destroy(player.gameObject);
+      }
     } else if (other.gameObject.CompareTag("Enemy")) {
       GameData.health--;
-      other.gameObject.transform.position += Vector3.up * 5f;
+      Dead();
+      // other.gameObject.transform.position += Vector3.up * 2f;
     } else if (other.gameObject.CompareTag("Portal")) {
       if(GameData.levelComplete()) {
         GameData.nextLevel();

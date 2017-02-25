@@ -8,11 +8,13 @@ public class PortalController : MonoBehaviour {
   public void Start() {
       GetComponentsInChildren<ParticleSystem>()[0].Stop();
       GetComponent<MeshRenderer>().enabled = false;
+      GetComponent<AudioSource>().enabled = false;
   }
   public void Update() {
     if(GameData.levelComplete() && !open) {
       GetComponentsInChildren<ParticleSystem>()[0].Play();
       GetComponent<MeshRenderer>().enabled = true;
+      GetComponent<AudioSource>().enabled = true;
       open=true;
     }
   }
