@@ -14,7 +14,7 @@ public class GameData : MonoBehaviour {
     }
   }
   public static int collectedCollectibles = 0;
-  public static int health = 10;
+  public static int health = 5;
   public static bool showCursor = false;
   private static int neededCollectibles = 3;
 

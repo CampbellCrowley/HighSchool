@@ -4,52 +4,66 @@ using UnityEngine;
 using UnityStandardAssets.ImageEffects;
 
 public
- class PlayerController : MonoBehaviour {
+class PlayerController : MonoBehaviour {
   [System.Serializable] public class Sounds {
-    public
-     AudioPlayer Player;
-    public
-     AudioClip JumpSound;
-    public
-     AudioClip LandSound;
-    public
-     AudioClip[] FootSteps;
-   }
+   public
+    AudioPlayer Player;
+   public
+    AudioClip JumpSound;
+   public
+    AudioClip LandSound;
+   public
+    AudioClip[] FootSteps;
+  }
 
-   public float moveSpeed = 5f;
-  public
-   float jumpMultiplier = 5f;
-  public
-   float MaxCameraDistance = 3f;
-  private
-   float CurrentCameraDistance = 3f;
-  public
-   GameObject Camera;
-  public
-   bool CameraDamping = false;
-  public
-   bool CameraObjectAvoidance = true;
-  public
-   bool rotateWithCamera = false;
-  public
-   GUIText collectedCounter;
-  public
-   GUIText lifeCounter;
-  public
-   GUIText timer;
-  public
-   float GameTime = 10f;
-  public
-   GUIText debug;
-  public
-   Sounds sounds;
+ [Header("Movement")]
+ public
+  float moveSpeed = 5f;
+ public
+  float jumpMultiplier = 5f;
+ public
+  float staminaDepletionRate = 0.1f;  // Percent per second
+ public
+  float staminaRechargeDelay = 3.0f;  // Seconds
+ public
+  float staminaRechargeMultiplier = 1.5f;
+ [Header("Camera")]
+ public
+  GameObject Camera;
+ public
+  bool CameraDamping = false;
+ public
+  bool CameraObjectAvoidance = true;
+ public
+  bool rotateWithCamera = false;
+ public
+  float MaxCameraDistance = 3f;
+ [Header("OSDs/HUD")]
+ public
+  GUIText collectedCounter;
+ public
+  GUIText lifeCounter;
+ public
+  GUIText timer;
+ public
+  GUIText stamina;
+ public
+  float staminaCountBars = 20f;
+ public
+  GUIText debug;
+ [Header("Look and Sound")]
+ public
+  Sounds sounds;
+ [Header("Misc.")]
+ public
+  float GameTime = 10f;
 
- private
-  float endTime = 0f;
  private
   Rigidbody rbody;
  private
   Animator anim;
+ private
+  Color startColor;
  private
   float turn = 0f;
  private
@@ -57,15 +71,25 @@ public
  private
   float moveAngle = 0f;
  private
-  bool isGrounded = false;
+  float CurrentCameraDistance = 3f;
+ private
+  bool isGrounded = true;
+ private
+  bool wasGrounded = true;
  private
   bool isCrouched = false;
  private
   bool isSprinting = false;
  private
-  Color startColor;
+  float endTime = 0f;
  private
   float lastGroundedTime = 0f;
+ private
+  float lastSprintTime = 0f;
+ private
+  float staminaRemaining = 1.0f;
+ private
+  float lastJumpSoundTimejump = 0.0f;
 
   void Awake() {
     if (sounds.LandSound != null) sounds.LandSound.LoadAudioData();
@@ -73,10 +97,10 @@ public
     foreach (AudioClip step in sounds.FootSteps) {
       if (step != null) step.LoadAudioData();
     }
+    GameData.showCursor = false;
   }
 
   void Start() {
-    Cursor.visible = false;
     anim = GetComponent<Animator>();
     rbody = GetComponent<Rigidbody>();
     startColor = RenderSettings.fogColor;
@@ -84,11 +108,13 @@ public
   }
 
   void FixedUpdate() {
+    // Inputs
     float moveHorizontal = Input.GetAxis("Horizontal");
     float moveVertical = Input.GetAxis("Vertical");
     float lookHorizontal = Input.GetAxis("Mouse X");
     float lookVertical = Input.GetAxis("Mouse Y");
     RaycastHit hitinfo;
+    wasGrounded = isGrounded;
     isGrounded = Physics.SphereCast(transform.position + Vector3.up * 0.01f,
                                     0.0f, Vector3.down, out hitinfo, 0.22f);
     isCrouched = Input.GetAxis("Crouch") > 0.5;
@@ -102,6 +128,7 @@ public
                    "\nMouseY: " + lookVertical + "\nTime: " + Time.time;
     }
 
+    // Prevent movement in first 1.5 seconds of the level.
     if (Time.time < 1.5) {
       moveHorizontal = 0;
       moveVertical = 0;
@@ -109,15 +136,42 @@ public
       lookVertical = 0;
       jump = false;
     }
+
+    // Stamina
+    if (isSprinting) lastSprintTime = Time.time;
+    if (Time.time - lastSprintTime >= staminaRechargeDelay) {
+      staminaRemaining +=
+          staminaDepletionRate * Time.deltaTime * staminaRechargeMultiplier;
+      if (staminaRemaining > 1.0) staminaRemaining = 1.0f;
+    }
+    if (staminaRemaining <= 0) {
+      isSprinting = false;
+    } else if (isSprinting && (moveHorizontal != 0 || moveVertical != 0)) {
+      staminaRemaining -= staminaDepletionRate * Time.deltaTime;
+    }
+
+    // Start countdown once player moves.
     if (!(moveHorizontal == 0 && moveVertical == 0 && !jump) && endTime == 0f) {
       endTime = Time.time + GameTime;
     }
+
+    // HUD
     if (collectedCounter != null) {
       collectedCounter.text =
           GameData.collectedCollectibles + " Items";
     }
     if (lifeCounter != null) {
       lifeCounter.text = GameData.health + " Health";
+    }
+    if(stamina != null) {
+      stamina.text = "Stamina: ";
+      for (int i = 0; i < (int)(staminaRemaining * staminaCountBars); i++) {
+        stamina.text += "|";
+      }
+      for (int i = (int)(staminaCountBars * staminaRemaining);
+           i < staminaCountBars; i++) {
+        stamina.text += "!";
+      }
     }
     if (timer != null) {
       float timeRemaining = Mathf.Round((endTime - Time.time) * 10f) / 10f;
@@ -132,9 +186,9 @@ public
       timer.text = timeRemaining_;
     }
 
+    // Movement
     Vector3 movement =
         moveHorizontal * Vector3.right + moveVertical * Vector3.forward;
-
     Vector3.ClampMagnitude(movement, 1.0f);
     if (isCrouched) {
       movement *= moveSpeed * 0.5f;
@@ -146,14 +200,14 @@ public
       movement *= moveSpeed * 1.0f;
       forward = movement.magnitude / 6f;
     }
-
     movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
                  (rbody.velocity.y - 9.81f * Time.deltaTime)) *
                 Vector3.up;
     movement =
         Quaternion.Euler(0, Camera.transform.eulerAngles.y, 0) * movement;
-
     rbody.velocity = Vector3.Lerp(movement, rbody.velocity, 0.5f);
+
+    // Rotation
     if (rotateWithCamera) {
       transform.rotation = Quaternion.Euler(
           transform.eulerAngles.x, transform.eulerAngles.y + lookHorizontal,
@@ -177,6 +231,7 @@ public
       }
     }
 
+    // Camera
     if (CameraObjectAvoidance) {
       RaycastHit hit;
       Physics.Linecast(transform.position + Vector3.up * 2f,
@@ -191,7 +246,6 @@ public
         }
       }
     }
-
     Vector3 newCameraPos =
         transform.position + Vector3.up * 2f +
         Vector3.ClampMagnitude(
@@ -228,6 +282,7 @@ public
           Quaternion.Euler(-75.0f, Camera.transform.eulerAngles.y, 0f);
     }
 
+    // VFX
     float vignette = 0.0f;
     GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
     float enemydistance = 100f;
@@ -248,10 +303,17 @@ public
           Color.Lerp(startColor, Color.red, (vignette / 0.45f));
     }
 
+    // Sound
     if (isGrounded && Time.time - lastGroundedTime >= 0.05f &&
         sounds.Player != null) {
       AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
       if (sounds.LandSound != null) player.clip = sounds.LandSound;
+    }
+    if (jump && Time.time - lastJumpSoundTimejump >= 0.5f &&
+        sounds.Player != null) {
+      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      if (sounds.JumpSound != null) player.clip = sounds.JumpSound;
+      lastJumpSoundTimejump = Time.time;
     }
 
     if (isGrounded) lastGroundedTime = Time.time;

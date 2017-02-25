@@ -35,18 +35,22 @@ public class MenuController : MonoBehaviour {
      initialMoveSpeed = SudoPlayer.moveSpeed;
      initalSudoPosition = Camera1.transform.localPosition;
      initalSudoRotation = Camera1.transform.localRotation;
-     GameData.showCursor = true;
+     foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
+       OSD.enabled = false;
+     }
    }
+  public
+   void Start() { GameData.showCursor = true; }
 
   public
    void PlayGame() {
-     GameData.nextLevel();
      GameData.showCursor = true;
+     GameData.nextLevel();
    }
   public
    void Settings() {
-     GameData.Settings();
      GameData.showCursor = true;
+     GameData.Settings();
    }
   public
    void PlayTutorial() {
@@ -72,6 +76,9 @@ public class MenuController : MonoBehaviour {
          buttons[i].interactable = !buttons[i].interactable;
        }
        if (inTutorial) {
+         foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
+           OSD.enabled = true;
+         }
          Camera2.transform.position = Camera1.transform.position;
          Camera2.transform.rotation = Camera1.transform.rotation;
          Camera1.SetActive(false);
@@ -84,6 +91,9 @@ public class MenuController : MonoBehaviour {
          Terrain.movePlayerToTop();
          inTransition = false;
        } else {
+         foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
+           OSD.enabled = false;
+         }
          Camera1.transform.position = Camera2.transform.position;
          Camera1.transform.rotation = Camera2.transform.rotation;
          Camera1.SetActive(true);
