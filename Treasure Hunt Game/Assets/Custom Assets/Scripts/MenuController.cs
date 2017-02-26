@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -41,21 +42,23 @@ public class MenuController : MonoBehaviour {
        OSD.enabled = false;
      }
 
-     GameObject.Find("Toggle Vignette").GetComponent<Toggle>().isOn =
-         GameData.vignette;
-     GameObject.Find("Toggle DOF").GetComponent<Toggle>().isOn = GameData.dof;
-     GameObject.Find("Toggle Motion Blur").GetComponent<Toggle>().isOn =
-         GameData.motionBlur;
-     GameObject.Find("Toggle Bloom and Flare").GetComponent<Toggle>().isOn =
-         GameData.bloomAndFlares;
-     GameObject.Find("Toggle Fullscreen").GetComponent<Toggle>().isOn =
-         GameData.fullscreen;
-     GameObject.Find("Toggle Sound Effects").GetComponent<Toggle>().isOn =
-         GameData.soundEffects;
-     GameObject.Find("Toggle Music").GetComponent<Toggle>().isOn =
-         GameData.music;
-     GameObject.Find("Toggle Camera Damping").GetComponent<Toggle>().isOn =
-         GameData.cameraDamping;
+     try {
+       GameObject.Find("Toggle Vignette").GetComponent<Toggle>().isOn =
+           GameData.vignette;
+       GameObject.Find("Toggle DOF").GetComponent<Toggle>().isOn = GameData.dof;
+       GameObject.Find("Toggle Motion Blur").GetComponent<Toggle>().isOn =
+           GameData.motionBlur;
+       GameObject.Find("Toggle Bloom and Flare").GetComponent<Toggle>().isOn =
+           GameData.bloomAndFlares;
+       GameObject.Find("Toggle Fullscreen").GetComponent<Toggle>().isOn =
+           GameData.fullscreen;
+       GameObject.Find("Toggle Sound Effects").GetComponent<Toggle>().isOn =
+           GameData.soundEffects;
+       GameObject.Find("Toggle Music").GetComponent<Toggle>().isOn =
+           GameData.music;
+       GameObject.Find("Toggle Camera Damping").GetComponent<Toggle>().isOn =
+           GameData.cameraDamping;
+     } catch (NullReferenceException e) {}
      GameData.fullscreen = Screen.fullScreen;
    }
   public
