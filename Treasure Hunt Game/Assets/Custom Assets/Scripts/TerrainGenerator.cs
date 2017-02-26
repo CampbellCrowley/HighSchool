@@ -693,6 +693,11 @@ public class TerrainGenerator : MonoBehaviour {
 
       terrains.Add(new Terrains());
       terrains[terrains.Count - 1].terrData = new TerrainData() as TerrainData;
+      terrains[terrains.Count - 1].terrData.treePrototypes =
+          terrains[0].terrData.treePrototypes;
+      terrains[terrains.Count - 1].terrData.RefreshPrototypes();
+      terrains[terrains.Count - 1].terrData.treeInstances =
+          terrains[0].terrData.treeInstances;
       terrains[terrains.Count - 1].terrData.heightmapResolution =
           terrains[0].terrData.heightmapResolution;
       terrains[terrains.Count - 1].terrData.size = terrains[0].terrData.size;
@@ -1673,8 +1678,7 @@ public class TerrainGenerator : MonoBehaviour {
     }
   }
  public
-  void movePlayerToTop() {
-    // Make sure the player stays above the terrain
+  float GetTerrainHeight() {
     int xCenter = Mathf.RoundToInt(
         (player.transform.position.x - terrWidth / 2) / terrWidth);
     int yCenter = Mathf.RoundToInt(
@@ -1684,12 +1688,17 @@ public class TerrainGenerator : MonoBehaviour {
       float TerrainHeight =
           terrains[terrLoc].terrList.GetComponent<Terrain>().SampleHeight(
               player.transform.position);
-
-      if (player != null) {
-        (player.GetComponent<InitPlayer>())
-            .updatePosition(player.transform.position.x, TerrainHeight,
-                            player.transform.position.z);
-      }
+      return TerrainHeight;
+    }
+    return 0;
+  }
+ public
+  void movePlayerToTop() {
+    // Make sure the player stays above the terrain
+    if (player != null) {
+      (player.GetComponent<InitPlayer>())
+          .updatePosition(player.transform.position.x, GetTerrainHeight(),
+                          player.transform.position.z);
     }
   }
 }

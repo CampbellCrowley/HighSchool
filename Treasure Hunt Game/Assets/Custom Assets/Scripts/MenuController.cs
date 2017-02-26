@@ -6,6 +6,8 @@ using UnityEngine.UI;
 public class MenuController : MonoBehaviour {
   public
    TerrainGenerator Terrain;
+  public
+   GameObject SettingsCamera;
 
    [Header("Sudo Player")]
   public
@@ -38,19 +40,48 @@ public class MenuController : MonoBehaviour {
      foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
        OSD.enabled = false;
      }
+
+     GameObject.Find("Toggle Vignette").GetComponent<Toggle>().isOn =
+         GameData.vignette;
+     GameObject.Find("Toggle DOF").GetComponent<Toggle>().isOn = GameData.dof;
+     GameObject.Find("Toggle Motion Blur").GetComponent<Toggle>().isOn =
+         GameData.motionBlur;
+     GameObject.Find("Toggle Bloom and Flare").GetComponent<Toggle>().isOn =
+         GameData.bloomAndFlares;
+     GameObject.Find("Toggle Fullscreen").GetComponent<Toggle>().isOn =
+         GameData.fullscreen;
+     GameObject.Find("Toggle Sound Effects").GetComponent<Toggle>().isOn =
+         GameData.soundEffects;
+     GameObject.Find("Toggle Music").GetComponent<Toggle>().isOn =
+         GameData.music;
+     GameObject.Find("Toggle Camera Damping").GetComponent<Toggle>().isOn =
+         GameData.cameraDamping;
+     GameData.fullscreen = Screen.fullScreen;
    }
   public
    void Start() { GameData.showCursor = true; }
 
+  public void MainMenu() {
+    GameData.MainMenu();
+  }
   public
    void PlayGame() {
      GameData.showCursor = true;
      GameData.nextLevel();
    }
   public
-   void Settings() {
+   void OpenSettings() {
      GameData.showCursor = true;
-     GameData.Settings();
+     Camera1.SetActive(false);
+     Camera2.SetActive(false);
+     SettingsCamera.SetActive(true);
+   }
+  public
+   void CloseSettings() {
+     GameData.showCursor = true;
+     Camera1.SetActive(true);
+     Camera2.SetActive(false);
+     SettingsCamera.SetActive(false);
    }
   public
    void PlayTutorial() {
@@ -116,5 +147,29 @@ public class MenuController : MonoBehaviour {
              SudoPlayer.moveSpeed, initialMoveSpeed, 0.3f * Time.deltaTime);
        }
      }
+   }
+
+  public
+   void ToggleVignette() { GameData.vignette = !GameData.vignette; }
+  public
+   void ToggleDOF() { GameData.dof = !GameData.dof; }
+  public
+   void ToggleMotionBlur() { GameData.motionBlur = !GameData.motionBlur; }
+  public
+   void ToggleBloomAndFlare() {
+     GameData.bloomAndFlares = !GameData.bloomAndFlares;
+   }
+  public
+   void ToggleFullscreen() {
+     GameData.fullscreen = !GameData.fullscreen;
+     Screen.fullScreen = GameData.fullscreen;
+   }
+  public
+   void ToggleSoundEffects() { GameData.soundEffects = !GameData.soundEffects; }
+  public
+   void ToggleMusic() { GameData.music = !GameData.music; }
+  public
+   void ToggleCameraDamping() {
+     GameData.cameraDamping = !GameData.cameraDamping;
    }
  }

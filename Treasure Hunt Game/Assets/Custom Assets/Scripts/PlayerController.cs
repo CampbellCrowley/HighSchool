@@ -36,8 +36,8 @@ class PlayerController : MonoBehaviour {
  [Header("Camera")]
  public
   GameObject Camera;
- public
-  bool CameraDamping = false;
+ // public
+ //  bool CameraDamping = false;
  public
   bool CameraObjectAvoidance = true;
  public
@@ -53,6 +53,8 @@ class PlayerController : MonoBehaviour {
   GUIText timer;
  public
   GUIText stamina;
+ public
+  GUIText levelDisplay;
  public
   float staminaCountBars = 20f;
  public
@@ -89,8 +91,6 @@ class PlayerController : MonoBehaviour {
  private
   bool isGrounded = true;
  private
-  bool wasGrounded = true;
- private
   bool isCrouched = false;
  private
   bool isSprinting = false;
@@ -112,6 +112,10 @@ class PlayerController : MonoBehaviour {
   float lastFootstepTime = 0.0f;
  private
   float deathTime = 0.0f;
+ private
+  Transform lastFloorTransform;
+ private
+  Vector3 lastFloorTransformPosition;
 
   void Awake() {
     if (sounds.LandSound != null) sounds.LandSound.LoadAudioData();
@@ -153,7 +157,6 @@ class PlayerController : MonoBehaviour {
     float lookHorizontal = Input.GetAxis("Mouse X");
     float lookVertical = Input.GetAxis("Mouse Y");
     RaycastHit hitinfo;
-    wasGrounded = isGrounded;
     isGrounded = Physics.SphereCast(transform.position + Vector3.up * 0.01f,
                                     0.0f, Vector3.down, out hitinfo, 0.22f);
     isCrouched = Input.GetAxis("Crouch") > 0.5;
@@ -161,6 +164,23 @@ class PlayerController : MonoBehaviour {
     isSprinting = (Input.GetAxis("Sprint") > 0.5 && !isCrouched) ||
                   (isSprinting && !isGrounded);
 
+    // Standing on platform
+    if (lastFloorTransform == null ||
+        hitinfo.transform != null &&
+            hitinfo.transform.name != lastFloorTransform.name) {
+      lastFloorTransform = hitinfo.transform;
+      if (lastFloorTransform != null) {
+        lastFloorTransformPosition = lastFloorTransform.position;
+      }
+    }
+    if (isGrounded) {
+      transform.position +=
+          hitinfo.transform.position - lastFloorTransformPosition;
+      lastFloorTransform = hitinfo.transform;
+      lastFloorTransformPosition = lastFloorTransform.position;
+    }
+
+    // Debug HUD
     if (debug != null) {
       debug.text = "Horizontal: " + moveHorizontal + "\nVertical: " +
                    moveVertical + "\nMouse X: " + lookHorizontal +
@@ -185,7 +205,8 @@ class PlayerController : MonoBehaviour {
     }
     if (staminaRemaining <= 0) {
       isSprinting = false;
-    } else if (isSprinting && (moveHorizontal != 0 || moveVertical != 0)) {
+    } else if (isGrounded && isSprinting &&
+               (moveHorizontal != 0 || moveVertical != 0)) {
       staminaRemaining -= staminaDepletionRate * Time.deltaTime;
     }
 
@@ -215,7 +236,7 @@ class PlayerController : MonoBehaviour {
     if (timer != null) {
       float timeRemaining = Mathf.Round((endTime - Time.time) * 10f) / 10f;
       if (endTime == 0f) timeRemaining = GameTime;
-      string timeRemaining_ = "Time Remaining: ";
+      string timeRemaining_ = "";
       if (timeRemaining > 0) {
         timeRemaining_ += timeRemaining;
       } else {
@@ -223,6 +244,17 @@ class PlayerController : MonoBehaviour {
       }
       if (timeRemaining % 1 == 0 && timeRemaining > 0) timeRemaining_ += ".0";
       timer.text = timeRemaining_;
+      if (!isDead && timeRemaining <= 0.7f * 4f) {
+        Time.timeScale = timeRemaining / 4f + 0.3f;
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+      }
+      if (!isDead && timeRemaining <= 0) {
+        GameData.health--;
+        Dead();
+      }
+    }
+    if(levelDisplay != null) {
+      levelDisplay.text = "Level: " + GameData.getLevel();
     }
 
     // Movement
@@ -303,7 +335,7 @@ class PlayerController : MonoBehaviour {
                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)),
             1.0f) *
             CurrentCameraDistance;
-    if (CameraDamping) {
+    if (GameData.cameraDamping) {
       newCameraPos =
           Vector3.Lerp(Camera.transform.position, newCameraPos, 0.15f);
     }
@@ -346,25 +378,14 @@ class PlayerController : MonoBehaviour {
     // Sound
     if (isGrounded && Time.time - lastGroundedTime >= 0.05f &&
         sounds.Player != null) {
-      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-      if (sounds.LandSound != null) {
-        player.clip = sounds.LandSound;
-      } else {
-        Destroy(player.gameObject);
-      }
+      PlaySound(sounds.LandSound);
     }
     if (jump && Time.time - lastJumpSoundTimejump >= 0.5f &&
         sounds.Player != null) {
-      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-      if (sounds.JumpSound != null) {
-        player.clip = sounds.JumpSound;
-      } else {
-        Destroy(player.gameObject);
-      }
+      PlaySound(sounds.JumpSound);
       lastJumpSoundTimejump = Time.time;
     }
-    if (isGrounded && (moveVertical != 0 || moveHorizontal != 0) &&
-        sounds.Player != null) {
+    if (isGrounded && (moveVertical != 0 || moveHorizontal != 0)) {
       if ((isSprinting &&
            Time.time - lastFootstepTime >= footstepSizeSprinting) ||
           (isCrouched &&
@@ -372,15 +393,9 @@ class PlayerController : MonoBehaviour {
           (!isSprinting && !isCrouched &&
            Time.time - lastFootstepTime >= footstepSize)) {
         lastFootstepTime = Time.time;
-        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
         AudioClip footstepSound =
             sounds.FootSteps[(int)Random.Range(0, sounds.FootSteps.Length)];
-        if (footstepSound != null) {
-          player.clip = footstepSound;
-          player.volume = 0.3f;
-        } else {
-          Destroy(player.gameObject);
-        }
+        PlaySound(footstepSound);
       }
     }
 
@@ -390,21 +405,9 @@ class PlayerController : MonoBehaviour {
   void Dead() {
     isDead = true;
     if (GameData.health <= 0) {
-      if (sounds.Player != null) {
-        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-        if (sounds.LevelFail != null)
-          player.clip = sounds.LevelFail;
-        else
-          Destroy(player.gameObject);
-      }
+      PlaySound(sounds.LevelFail);
     } else {
-      if (sounds.Player != null) {
-        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-        if (sounds.Pain != null)
-          player.clip = sounds.Pain;
-        else
-          Destroy(player.gameObject);
-      }
+      PlaySound(sounds.Pain);
     }
     deathTime = Time.realtimeSinceStartup;
     Time.timeScale = 0.3f;
@@ -449,13 +452,7 @@ class PlayerController : MonoBehaviour {
         (endTime > Time.time || timer == null)) {
       Destroy(other.gameObject);
       GameData.collectedCollectibles++;
-      if (sounds.Player != null) {
-        AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-        if (sounds.CollectibleSound != null)
-          player.clip = sounds.CollectibleSound;
-        else
-          Destroy(player.gameObject);
-      }
+      PlaySound(sounds.CollectibleSound);
     } else if (other.gameObject.CompareTag("Enemy")) {
       GameData.health--;
       Dead();
@@ -464,6 +461,15 @@ class PlayerController : MonoBehaviour {
       if(GameData.levelComplete()) {
         GameData.nextLevel();
       }
+    }
+  }
+  void PlaySound(AudioClip clip) {
+    if (sounds.Player != null && GameData.soundEffects) {
+      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      if (sounds.CollectibleSound != null)
+        player.clip = clip;
+      else
+        Destroy(player.gameObject);
     }
   }
 }

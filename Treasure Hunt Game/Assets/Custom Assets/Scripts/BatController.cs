@@ -21,6 +21,9 @@ class BatController : MonoBehaviour {
 
   void Start() {
     anim = GetComponent<Animator>();
+    if(GameData.soundEffects) {
+      GetComponent<AudioSource>().enabled = false;
+    }
   }
 
   void Update() {
