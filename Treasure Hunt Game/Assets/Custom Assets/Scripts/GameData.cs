@@ -8,6 +8,8 @@ class GameData : MonoBehaviour {
  public
   static GameData Instance;
  public
+  static AudioSource MusicPlayer;
+ public
   void Awake() {
     if (Instance == null) {
       DontDestroyOnLoad(gameObject);
@@ -15,6 +17,7 @@ class GameData : MonoBehaviour {
     } else if (Instance != this) {
       Destroy(gameObject);
     }
+    MusicPlayer = GetComponent<AudioSource>();
   }
  public
   static int collectedCollectibles = 0;
@@ -22,6 +25,8 @@ class GameData : MonoBehaviour {
   static int health = 5;
  public
   static bool showCursor = false;
+ public
+  static bool isPaused = false;
  private
   static int neededCollectibles = 3;
 
@@ -60,6 +65,7 @@ class GameData : MonoBehaviour {
     if (Input.GetAxis("Skip") > 0.5f) {
       nextLevel();
     }
+    if (MusicPlayer != null) MusicPlayer.volume = music ? 0.5f : 0.0f;
   }
 
   public static bool vignette = true;

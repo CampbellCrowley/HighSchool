@@ -27,7 +27,7 @@ class BatController : MonoBehaviour {
   }
 
   void Update() {
-    if (!tutorial) {
+    if (!tutorial && !GameData.isPaused) {
       transform.rotation = Quaternion.identity;
 
       float TerrainHeight = ground.SampleHeight(transform.position);

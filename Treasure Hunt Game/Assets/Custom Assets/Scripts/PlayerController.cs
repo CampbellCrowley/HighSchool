@@ -187,8 +187,9 @@ class PlayerController : MonoBehaviour {
                    "\nMouseY: " + lookVertical + "\nTime: " + Time.time;
     }
 
-    // Prevent movement in first 1.5 seconds of the level.
-    if (Time.time - levelStartTime < 1.5 || isDead) {
+    // Prevent movement in first 1.5 seconds of the level or if dead, or if
+    // paused.
+    if (Time.time - levelStartTime < 1.5 || isDead || GameData.isPaused) {
       moveHorizontal = 0;
       moveVertical = 0;
       lookHorizontal = 0;
