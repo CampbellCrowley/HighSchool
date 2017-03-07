@@ -1,14 +1,12 @@
 using UnityEngine;
 
 public class Projectile : MonoBehaviour {
-  public float lifespan = 10000.0f;
+  public float lifespan = 3.0f;
   public bool placeholder = false;
   private float birth;
 
   public void Start() {
     birth = Time.time;
-  }
-  public void Update() {
     if(placeholder) {
       GetComponent<Rigidbody>().isKinematic = true;
       GetComponent<MeshRenderer>().enabled = false;
@@ -18,6 +16,8 @@ public class Projectile : MonoBehaviour {
       GetComponent<MeshRenderer>().enabled = true;
       GetComponent<CapsuleCollider>().enabled = true;
     }
+  }
+  public void Update() {
     if(Time.time - birth > lifespan && !placeholder) {
       Destroy(gameObject);
     }

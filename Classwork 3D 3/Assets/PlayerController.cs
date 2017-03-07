@@ -454,7 +454,7 @@ class PlayerController : MonoBehaviour {
     if (other.gameObject.CompareTag("Collectible") &&
         (endTime > Time.time || timer == null)) {
       Destroy(other.gameObject);
-      GameData.collectedCollectibles++;
+      GameData.collectedCollectibles+=10;
       PlaySound(sounds.CollectibleSound);
     } else if (other.gameObject.CompareTag("Enemy")) {
       GameData.health--;
