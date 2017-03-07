@@ -9,34 +9,51 @@ public class PlayerShooter : MonoBehaviour {
   public void Start() {
     projectilePlaceholder.placeholder = true;
     lastShotTime = Time.time;
-    LineRenderer = GetComponent<LineRenderer>();
+    line = GetComponent<LineRenderer>();
   }
 
   public void Update() {
     float shoot = Input.GetAxis("Fire1");
     float shoot2 = Input.GetAxis("Fire2");
-    if(shoot > 0.5f && Time.time - lastShotTime > 0.2f && GameData.collectedCollectibles > 0) {
+    if (shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
+        GameData.collectedCollectibles > 0) {
       GameData.collectedCollectibles --;
       lastShotTime = Time.time;
       Projectile projectile = Instantiate(
           projectilePlaceholder, projectilePlaceholder.transform.position,
           projectilePlaceholder.transform.rotation, transform);
       projectile.placeholder = false;
-      projectile.GetComponent<Rigidbody>().velocity = transform.rotation*(Vector3.forward *
-                                                    projectile_speed);
+      projectile.GetComponent<Rigidbody>().velocity =
+          transform.rotation * (Vector3.forward * projectile_speed);
       Physics.IgnoreCollision(GetComponent<CapsuleCollider>(),
                               projectile.GetComponent<CapsuleCollider>());
       projectile.transform.parent = null;
-    } else if(shoot2 > 0.5f && Time.time - lastShotTime > 0.225f && GameData.collectedCollectibles > 0) {
+    } else if (shoot2 > 0.5f && Time.time - lastShotTime > 0.225f &&
+               GameData.collectedCollectibles > 0) {
       GameData.collectedCollectibles -= 2;
       lastShotTime = Time.time;
-      RayCast raycast;
-      Physics.Raycast(projectilePlaceholder.transform.position, Vector3.forward, out raycast);
+      RaycastHit raycast;
+      Physics.Raycast(projectilePlaceholder.transform.position,
+                      transform.rotation * Vector3.forward * 10f, out raycast);
 
-      if(line!=null && ) {
-        line.SetPosition (0, projectileHolder.transform.position);
+      if(line!=null && raycast.transform != null) {
+        line.enabled = true;
+        line.SetPosition (0, projectilePlaceholder.transform.position);
+        line.SetPosition (1, raycast.transform.position);
+        if (raycast.transform.gameObject.GetComponent<EnemyController>()
+                .health-- <= 0) {
+          raycast.transform.gameObject.GetComponent<EnemyController>().kill();
+        }
+      } else {
+        line.enabled = true;
+        line.SetPosition (0, projectilePlaceholder.transform.position);
+        line.SetPosition(1, projectilePlaceholder.transform.position +
+                                transform.rotation * (Vector3.forward * 10f));
       }
 
+    }
+    if(Time.time - lastShotTime > 0.1f) {
+      line.enabled = false;
     }
   }
 }
