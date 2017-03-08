@@ -10,6 +10,10 @@ public class PlayerShooter : MonoBehaviour {
     projectilePlaceholder.placeholder = true;
     lastShotTime = Time.time;
     line = GetComponent<LineRenderer>();
+    line.startColor = Color.white;
+    line.endColor = Color.red;
+    line.startWidth = 0.1f;
+    line.endWidth = 0.01f;
   }
 
   public void Update() {
