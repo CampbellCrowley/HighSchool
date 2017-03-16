@@ -14,6 +14,8 @@ public class PlayerShooter : MonoBehaviour {
     line.endColor = Color.red;
     line.startWidth = 0.1f;
     line.endWidth = 0.01f;
+    Material whiteDiffuseMat = new Material(Shader.Find("Unlit/Texture"));
+    line.material = whiteDiffuseMat;
   }
 
   public void Update() {

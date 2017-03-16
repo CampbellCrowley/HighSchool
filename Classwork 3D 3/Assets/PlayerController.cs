@@ -151,6 +151,12 @@ class PlayerController : MonoBehaviour {
   }
 
   void FixedUpdate() {
+
+    if(transform.position.y < -100f) {
+      transform.position += Vector3.up * 110f;
+      rbody.velocity = Vector3.up*0f;
+    }
+
     // Inputs
     float moveHorizontal = Input.GetAxis("Horizontal");
     float moveVertical = Input.GetAxis("Vertical");
@@ -338,7 +344,7 @@ class PlayerController : MonoBehaviour {
             CurrentCameraDistance;
     if (GameData.cameraDamping) {
       newCameraPos =
-          Vector3.Lerp(Camera.transform.position, newCameraPos, 0.15f);
+          Vector3.Lerp(Camera.transform.position, newCameraPos, 0.33f);
     }
     Camera.transform.position = newCameraPos;
     Camera.transform.rotation =

@@ -18,8 +18,13 @@ public class Projectile : MonoBehaviour {
     }
   }
   public void Update() {
+    GameObject player = GameObject.Find("Ethan");
     if(Time.time - birth > lifespan && !placeholder) {
       Destroy(gameObject);
+    } else {
+      Transform currentTransform = transform;
+      transform.LookAt(player.transform);
+      transform.rotation = Quaternion.Lerp(currentTransform.rotation, transform.rotation, 0.1f);
     }
   }
 }
