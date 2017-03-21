@@ -5,11 +5,15 @@ class EnemyController : MonoBehaviour {
  public
   Projectile projectilePlaceholder;
  public
+  GameObject projectileGun;
+ public
   bool isRaycasting = true;
  public
   float projectile_speed;
  public
   int health = 5;
+ public
+  bool spawnChildren = true;
  private
   GameObject player;
  private
@@ -20,14 +24,21 @@ class EnemyController : MonoBehaviour {
  private
   Vector3 lastTargetPosition;
  private
+  Vector3 lastPosition;
+ private
   Vector3 startPos;
+ private
+  float lastSpawnTime;
  private
   float lastShotTime;
  public
   void Start() {
+    GameData.numEnemies++;
     player = GameObject.Find("Ethan");
     startPos = transform.position;
     lastTargetPosition = projectilePlaceholder.transform.position;
+    lastPosition = transform.position;
+    lastSpawnTime = Time.time;
     lastShotTime = Time.time;
     line = GetComponent<LineRenderer>();
     line.startColor = Color.white;
@@ -61,7 +72,10 @@ class EnemyController : MonoBehaviour {
     if ((player.transform.position - projectilePlaceholder.transform.position)
             .magnitude <= 10f) {
       lastTargetPosition = target;
+    } else {
+      lastTargetPosition = Quaternion.Euler(0,1f,0) * (lastTargetPosition + transform.position-lastPosition);
     }
+    lastPosition = transform.position;
 
     if (isRaycasting) {
       RaycastHit raycast;
@@ -82,6 +96,7 @@ class EnemyController : MonoBehaviour {
         }
       }
     }
+    projectileGun.transform.rotation = projectilePlaceholder.transform.rotation * Quaternion.Euler(90f,0,0);
     if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
       lastShotTime = Time.time;
       Projectile projectile = Instantiate(
@@ -99,6 +114,15 @@ class EnemyController : MonoBehaviour {
                               projectile.GetComponent<CapsuleCollider>());
       projectile.transform.parent = null;
     }
+    if(Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10) {
+      lastSpawnTime = Time.time;
+      Instantiate(gameObject);
+    }
+  }
+
+ public
+  void OnDestroy() {
+    GameData.numEnemies--;
   }
 
  public

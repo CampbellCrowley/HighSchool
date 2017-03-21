@@ -27,6 +27,9 @@ class GameData : MonoBehaviour {
   static bool showCursor = false;
  public
   static bool isPaused = false;
+ public
+  static int numEnemies = 0;
+
  private
   static int neededCollectibles = 3;
 

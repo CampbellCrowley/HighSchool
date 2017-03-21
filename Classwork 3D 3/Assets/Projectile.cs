@@ -27,4 +27,10 @@ public class Projectile : MonoBehaviour {
       transform.rotation = Quaternion.Lerp(currentTransform.rotation, transform.rotation, 0.1f);
     }
   }
+  public void OnCollisionEnter(Collision other) {
+    Debug.Log("COLLISION" + other.gameObject.name);
+    if(other.gameObject.CompareTag("Player")) {
+     GameData.health--;
+    }
+  }
 }
