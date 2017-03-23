@@ -11,16 +11,18 @@ class EnemyController : MonoBehaviour {
  public
   float projectile_speed;
  public
+  int StartHealth = 5;
+ public
   int health = 5;
  public
   bool spawnChildren = true;
+
  private
   GameObject player;
  private
   LineRenderer line;
  private
   bool shoot = false;
-
  private
   Vector3 lastTargetPosition;
  private
@@ -32,8 +34,10 @@ class EnemyController : MonoBehaviour {
  private
   float lastShotTime;
  public
+  void Awake() { GameData.numEnemies++; }
+ public
   void Start() {
-    GameData.numEnemies++;
+    health = StartHealth;
     player = GameObject.Find("Ethan");
     startPos = transform.position;
     lastTargetPosition = projectilePlaceholder.transform.position;
@@ -89,7 +93,8 @@ class EnemyController : MonoBehaviour {
       line.SetPosition(1, projectilePlaceholder.transform.position +
                               projectilePlaceholder.transform.forward * 10f);
       if (line != null && raycast.transform != null) {
-        if (raycast.transform.gameObject.GetComponent<PlayerController>()) {
+        if (raycast.transform.gameObject == player ||
+            player.GetComponent<PlayerController>().isDead) {
           // line.enabled = true;
           shoot = true;
           lastShotTime -= (10 - raycast.distance) / 20f;

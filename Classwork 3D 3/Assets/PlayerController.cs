@@ -73,6 +73,9 @@ class PlayerController : MonoBehaviour {
   float GameTime = 10f;
  public
   GameObject Ragdoll;
+ public
+  bool isDead = false;
+
 
  private
   Rigidbody rbody;
@@ -94,8 +97,6 @@ class PlayerController : MonoBehaviour {
   bool isCrouched = false;
  private
   bool isSprinting = false;
- private
-  bool isDead = false;
  private
   float endTime = 0f;
  private
@@ -154,7 +155,7 @@ class PlayerController : MonoBehaviour {
 
     if(transform.position.y < -100f) {
       transform.position += Vector3.up * 110f;
-      rbody.velocity = Vector3.up*0f;
+      rbody.velocity = Vector3.zero;
     }
 
     // Inputs
@@ -220,6 +221,10 @@ class PlayerController : MonoBehaviour {
     // Start countdown once player moves.
     if (!(moveHorizontal == 0 && moveVertical == 0 && !jump) && endTime == 0f) {
       endTime = Time.time + GameTime;
+    }
+
+    if (GameData.health <= 0) {
+      Dead();
     }
 
     // HUD
@@ -419,13 +424,14 @@ class PlayerController : MonoBehaviour {
       PlaySound(sounds.Pain);
     }
     deathTime = Time.realtimeSinceStartup;
-    Time.timeScale = 0.3f;
+    Time.timeScale = 0.01f;
     Time.fixedDeltaTime = 0.02f * Time.timeScale;
     GetComponent<Rigidbody>().isKinematic = true;
     if(Ragdoll != null) {
       Ragdoll.SetActive(true);
-      Ragdoll.transform.position = transform.position;
+      Ragdoll.transform.position = transform.position + Vector3.up * 0.1f;
       Ragdoll.transform.rotation = transform.rotation;
+      Ragdoll.GetComponent<Rigidbody>().velocity = rbody.velocity;
       foreach (SkinnedMeshRenderer renderer in
                    GetComponentsInChildren<SkinnedMeshRenderer>()) {
         renderer.enabled = false;

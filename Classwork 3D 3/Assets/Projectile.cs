@@ -1,13 +1,18 @@
 using UnityEngine;
 
-public class Projectile : MonoBehaviour {
-  public float lifespan = 3.0f;
-  public bool placeholder = false;
-  private float birth;
+public
+class Projectile : MonoBehaviour {
+ public
+  float lifespan = 3.0f;
+ public
+  bool placeholder = false;
+ private
+  float birth;
 
-  public void Start() {
+ public
+  void Start() {
     birth = Time.time;
-    if(placeholder) {
+    if (placeholder) {
       GetComponent<Rigidbody>().isKinematic = true;
       GetComponent<MeshRenderer>().enabled = false;
       GetComponent<CapsuleCollider>().enabled = false;
@@ -17,20 +22,22 @@ public class Projectile : MonoBehaviour {
       GetComponent<CapsuleCollider>().enabled = true;
     }
   }
-  public void Update() {
+ public
+  void Update() {
     GameObject player = GameObject.Find("Ethan");
-    if(Time.time - birth > lifespan && !placeholder) {
+    if (Time.time - birth > lifespan && !placeholder) {
       Destroy(gameObject);
     } else {
       Transform currentTransform = transform;
       transform.LookAt(player.transform);
-      transform.rotation = Quaternion.Lerp(currentTransform.rotation, transform.rotation, 0.1f);
+      transform.rotation =
+          Quaternion.Lerp(currentTransform.rotation, transform.rotation, 0.1f);
     }
   }
-  public void OnCollisionEnter(Collision other) {
-    Debug.Log("COLLISION" + other.gameObject.name);
-    if(other.gameObject.CompareTag("Player")) {
-     GameData.health--;
+ public
+  void OnCollisionEnter(Collision other) {
+    if (other.gameObject.CompareTag("Player")) {
+      GameData.health--;
     }
   }
 }

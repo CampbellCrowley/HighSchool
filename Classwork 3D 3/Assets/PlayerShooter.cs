@@ -5,9 +5,11 @@ public class PlayerShooter : MonoBehaviour {
   public float projectile_speed;
   private float lastShotTime = 0;
   private LineRenderer line;
+  private GameObject player;
 
   public void Start() {
     projectilePlaceholder.placeholder = true;
+    player = GameObject.Find("Ethan");
     lastShotTime = Time.time;
     line = GetComponent<LineRenderer>();
     line.startColor = Color.white;
@@ -31,7 +33,7 @@ public class PlayerShooter : MonoBehaviour {
       projectile.placeholder = false;
       projectile.GetComponent<Rigidbody>().velocity =
           transform.rotation * (Vector3.forward * projectile_speed);
-      Physics.IgnoreCollision(GetComponent<CapsuleCollider>(),
+      Physics.IgnoreCollision(player.GetComponent<CapsuleCollider>(),
                               projectile.GetComponent<CapsuleCollider>());
       projectile.transform.parent = null;
     } else if (shoot2 > 0.5f && Time.time - lastShotTime > 0.225f &&
@@ -40,15 +42,20 @@ public class PlayerShooter : MonoBehaviour {
       lastShotTime = Time.time;
       RaycastHit raycast;
       Physics.Raycast(projectilePlaceholder.transform.position,
-                      transform.rotation * Vector3.forward * 10f, out raycast);
+                      transform.rotation * Vector3.forward, out raycast, 15f,
+                      ~(1 << 8));
 
       if(line!=null && raycast.transform != null) {
         line.enabled = true;
         line.SetPosition (0, projectilePlaceholder.transform.position);
-        line.SetPosition (1, raycast.transform.position);
-        if (raycast.transform.gameObject.GetComponent<EnemyController>()
-                .health-- <= 0) {
-          raycast.transform.gameObject.GetComponent<EnemyController>().kill();
+        EnemyController enemy =
+            raycast.transform.gameObject.GetComponent<EnemyController>();
+        if (enemy != null && enemy.health-- <= 0) {
+          enemy.kill();
+          line.SetPosition (1, raycast.transform.position);
+        } else {
+          line.SetPosition(1, projectilePlaceholder.transform.position +
+                                  transform.rotation * (Vector3.forward * 10f));
         }
       } else {
         line.enabled = true;
