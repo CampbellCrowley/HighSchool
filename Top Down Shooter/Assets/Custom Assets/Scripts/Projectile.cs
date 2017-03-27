@@ -18,19 +18,18 @@ class Projectile : MonoBehaviour {
       MeshRenderer[] meshRenderers = GetComponentsInChildren<MeshRenderer>();
       foreach (MeshRenderer m in meshRenderers)
         m.enabled = false;
-      GetComponent<CapsuleCollider>().enabled = false;
+      GetComponent<Collider>().enabled = false;
     } else {
       GetComponent<Rigidbody>().isKinematic = false;
       GetComponent<MeshRenderer>().enabled = true;
       MeshRenderer[] meshRenderers = GetComponentsInChildren<MeshRenderer>();
       foreach (MeshRenderer m in meshRenderers)
         m.enabled = true;
-      GetComponent<CapsuleCollider>().enabled = true;
+      GetComponent<Collider>().enabled = true;
     }
   }
  public
   void Update() {
-    GameObject player = GameObject.FindGameObjectsWithTag("Player")[0];
     if (Time.time - birth > lifespan && !placeholder) {
       Destroy(gameObject);
     }

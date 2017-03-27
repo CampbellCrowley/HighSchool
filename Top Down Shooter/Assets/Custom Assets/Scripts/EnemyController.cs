@@ -28,6 +28,8 @@ class EnemyController : MonoBehaviour {
  private
   Vector3 lastPosition;
  private
+  Quaternion lastRotation;
+ private
   Vector3 startPos;
  private
   float lastSpawnTime;
@@ -38,10 +40,11 @@ class EnemyController : MonoBehaviour {
  public
   void Start() {
     health = StartHealth;
-    player = GameObject.Find("Ethan");
+    player = GameObject.FindGameObjectsWithTag("Player")[0];
     startPos = transform.position;
     lastTargetPosition = projectilePlaceholder.transform.position;
     lastPosition = transform.position;
+    lastRotation = transform.rotation;
     lastSpawnTime = Time.time;
     lastShotTime = Time.time;
     line = GetComponent<LineRenderer>();
@@ -74,34 +77,43 @@ class EnemyController : MonoBehaviour {
                                   lastTargetPosition, 55.0f * Time.deltaTime);
     projectilePlaceholder.transform.LookAt(target);
     if ((player.transform.position - projectilePlaceholder.transform.position)
-            .magnitude <= 10f) {
+            .magnitude <= 20f) {
       lastTargetPosition = target;
     } else {
-      lastTargetPosition = Quaternion.Euler(0,1f,0) * (lastTargetPosition + transform.position-lastPosition);
+      lastTargetPosition =
+          Quaternion.Euler(0, 1f, 0) *
+          (lastTargetPosition + transform.position - lastPosition);
     }
     lastPosition = transform.position;
 
     if (isRaycasting) {
       RaycastHit raycast;
       Physics.Raycast(projectilePlaceholder.transform.position,
-                      projectilePlaceholder.transform.forward, out raycast, 10f,
+                      projectilePlaceholder.transform.forward, out raycast, 20f,
                       ~(1 << 2));
 
       shoot = false;
       // line.enabled = false;
       line.SetPosition(0, projectilePlaceholder.transform.position);
       line.SetPosition(1, projectilePlaceholder.transform.position +
-                              projectilePlaceholder.transform.forward * 10f);
+                              projectilePlaceholder.transform.forward * 20f);
       if (line != null && raycast.transform != null) {
-        if (raycast.transform.gameObject == player ||
-            player.GetComponent<PlayerController>().isDead) {
+        if (raycast.transform.gameObject == player) {
           // line.enabled = true;
           shoot = true;
           lastShotTime -= (10 - raycast.distance) / 20f;
         }
       }
     }
-    projectileGun.transform.rotation = projectilePlaceholder.transform.rotation * Quaternion.Euler(90f,0,0);
+    projectileGun.transform.rotation =
+        projectilePlaceholder.transform.rotation * Quaternion.Euler(180f, 0, 0);
+
+    Quaternion rotationOffset = Quaternion.Euler(0f, 0f, 90f);
+    transform.rotation =
+        Quaternion.Lerp(lastRotation, projectileGun.transform.rotation, 0.1f) *
+        rotationOffset;
+    lastRotation = transform.rotation * Quaternion.Inverse(rotationOffset);
+
     if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
       lastShotTime = Time.time;
       Projectile projectile = Instantiate(
@@ -115,11 +127,12 @@ class EnemyController : MonoBehaviour {
 
       projectile.transform.Rotate(new Vector3(90f, 0, 0));
 
-      Physics.IgnoreCollision(GetComponent<BoxCollider>(),
-                              projectile.GetComponent<CapsuleCollider>());
+      Physics.IgnoreCollision(GetComponent<Collider>(),
+                              projectile.GetComponent<Collider>());
       projectile.transform.parent = null;
     }
-    if(Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10) {
+    if (Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10 &&
+        spawnChildren) {
       lastSpawnTime = Time.time;
       Instantiate(gameObject);
     }

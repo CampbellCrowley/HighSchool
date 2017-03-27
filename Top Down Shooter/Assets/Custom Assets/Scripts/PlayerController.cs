@@ -143,11 +143,21 @@ class PlayerController : MonoBehaviour {
   }
 
   void Update() {
-    if (isDead && Time.realtimeSinceStartup - deathTime >= 5f) {
-      if (GameData.health > 0)
-        GameData.restartLevel();
-      else
-        GameData.MainMenu();
+    if (isDead) {
+      if (Time.realtimeSinceStartup - deathTime >= 7f) {
+        if (GameData.health > 0)
+          GameData.restartLevel();
+        else
+          GameData.MainMenu();
+      } else if (Time.realtimeSinceStartup - deathTime >= 3f) {
+        Debug.Log("S");
+        Time.timeScale = 0.3f;
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+      } else {
+        Debug.Log("SS");
+        Time.timeScale = 0.01f;
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+      }
     }
   }
 
@@ -168,8 +178,9 @@ class PlayerController : MonoBehaviour {
                                     0.0f, Vector3.down, out hitinfo, 0.22f);
     isCrouched = Input.GetAxis("Crouch") > 0.5;
     bool jump = Input.GetAxis("Jump") > 0.5 && isGrounded && !isCrouched;
-    isSprinting = (Input.GetAxis("Sprint") > 0.5 && !isCrouched) ||
-                  (isSprinting && !isGrounded);
+    float sprintInput = Input.GetAxis("Sprint");
+    isSprinting =
+        (sprintInput > 0.5 && !isCrouched) || (isSprinting && !isGrounded);
 
     // Standing on platform
     if (lastFloorTransform == null ||
@@ -274,14 +285,11 @@ class PlayerController : MonoBehaviour {
         moveHorizontal * Vector3.right + moveVertical * Vector3.forward;
     Vector3.ClampMagnitude(movement, 1.0f);
     if (isCrouched) {
-      forward = movement.magnitude / 5.0f;
-      movement *= moveSpeed * 0.5f;
-    } else if(isSprinting) {
       forward = movement.magnitude;
-      movement *= moveSpeed * 2.5f;
+      movement *= moveSpeed * 0.5f;
     } else {
-      forward = movement.magnitude / 2.5f;
-      movement *= moveSpeed * 1.0f;
+      forward = movement.magnitude / Mathf.Lerp(2.5f, 1.0f, sprintInput);
+      movement *= moveSpeed * Mathf.Lerp(1.0f, 2.5f, sprintInput);
     }
     movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
                  (rbody.velocity.y - 9.81f * Time.deltaTime)) *
@@ -379,8 +387,11 @@ class PlayerController : MonoBehaviour {
     }
     vignette = 0.45f - (enemydistance / 50f);
     if (vignette >= 0) {
-      Camera.GetComponent<VignetteAndChromaticAberration>().intensity =
-          vignette;
+      try {
+        Camera.GetComponent<VignetteAndChromaticAberration>().intensity =
+            vignette;
+      } catch (System.NullReferenceException e) {
+      }
       RenderSettings.fogStartDistance = 200 * (1 - (vignette / 0.45f));
       RenderSettings.fogEndDistance = 300 * (1 - (vignette / 0.45f));
       RenderSettings.fogColor =
@@ -423,9 +434,8 @@ class PlayerController : MonoBehaviour {
     } else {
       PlaySound(sounds.Pain);
     }
+    MaxCameraDistance *= 2f;
     deathTime = Time.realtimeSinceStartup;
-    Time.timeScale = 0.3f;
-    Time.fixedDeltaTime = 0.02f * Time.timeScale;
     GetComponent<Rigidbody>().isKinematic = true;
     if(Ragdoll != null) {
       Ragdoll.SetActive(true);

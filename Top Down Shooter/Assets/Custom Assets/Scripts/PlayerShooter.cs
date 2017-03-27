@@ -40,6 +40,7 @@ class PlayerShooter : MonoBehaviour {
  public
   void Update() {
     if (projectilePlaceholder == null) return;
+    if (player.GetComponent<PlayerController>().isDead) return;
     float shoot = Input.GetAxis("Fire1");
     float shoot2 = Input.GetAxis("Fire2");
     if (shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
