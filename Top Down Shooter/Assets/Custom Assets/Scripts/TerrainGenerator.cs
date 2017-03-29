@@ -116,7 +116,7 @@ public class TerrainGenerator : MonoBehaviour {
   [Tooltip("Water Tile to instantiate with the terrain when generating a new chunk.")]
   [SerializeField] public GameObject waterTile;
   // Player for deciding when to load chunks based on position.
-  GameObject player;
+  public GameObject player;
   InitPlayer[] players;
   int numIdentifiedPlayers = 0;
   [Tooltip("Whether or not to use the pre-determined seed or use Unity's random seed.")]
@@ -904,6 +904,11 @@ public class TerrainGenerator : MonoBehaviour {
     if (GenMode.DisplaceDivide) {
       // Divide chunk into 4 sections and displace the center thus creating 4
       // more sections per section until every pixel is defined.
+      if (useSeed) {
+        UnityEngine.Random.InitState(
+            (int)(Seed + PerfectlyHashThem((short)(changeX * 3 - 3),
+                                           (short)(changeZ * 3 - 3))));
+      }
       PeakModifier = UnityEngine.Random.value / 4 + 0.5f;
       divideAmount = 0;
       if (terrIndex == -1) {

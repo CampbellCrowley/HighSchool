@@ -21,7 +21,8 @@ class Projectile : MonoBehaviour {
       GetComponent<Collider>().enabled = false;
     } else {
       GetComponent<Rigidbody>().isKinematic = false;
-      GetComponent<MeshRenderer>().enabled = true;
+      // GetComponent<MeshRenderer>().enabled = true;
+      GetComponent<MeshRenderer>().enabled = false;
       MeshRenderer[] meshRenderers = GetComponentsInChildren<MeshRenderer>();
       foreach (MeshRenderer m in meshRenderers)
         m.enabled = true;
@@ -32,6 +33,8 @@ class Projectile : MonoBehaviour {
   void Update() {
     if (Time.time - birth > lifespan && !placeholder) {
       Destroy(gameObject);
+    } else if(Time.time - birth > 0.5 && !placeholder) {
+      GetComponent<MeshRenderer>().enabled = true;
     }
   }
  public

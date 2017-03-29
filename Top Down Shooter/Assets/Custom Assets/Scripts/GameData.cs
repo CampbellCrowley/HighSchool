@@ -24,7 +24,7 @@ class GameData : MonoBehaviour {
  public
   static int health = 10;
  public
-  static bool showCursor = false;
+  static bool showCursor = true;
  public
   static bool isPaused = false;
  public
@@ -38,6 +38,12 @@ class GameData : MonoBehaviour {
  public
   static bool levelComplete() {
     return collectedCollectibles >= neededCollectibles;
+  }
+ public
+  void NextLevel() {
+    collectedCollectibles = 0;
+    Debug.Log("Next Level!");
+    SceneManager.LoadScene(getLevel() + 1);
   }
  public
   static void nextLevel() {
@@ -66,9 +72,15 @@ class GameData : MonoBehaviour {
   void Update() {
     Cursor.visible = showCursor;
     if (Input.GetAxis("Skip") > 0.5f) {
+      Debug.Log("Skip Button Pressed.");
       nextLevel();
+    } else if (Input.GetAxis("MainMenu") > 0.5f) {
+      Debug.Log("Main Menu Button Pressed.");
+      MainMenu();
     }
-    if (MusicPlayer != null) MusicPlayer.volume = music ? 0.5f : 0.0f;
+    float goalVol = music ? 0.5f : 0.0f;
+    if (MusicPlayer != null)
+      MusicPlayer.volume = Mathf.Lerp(MusicPlayer.volume, goalVol, 0.1f);
   }
 
   public static bool vignette = true;

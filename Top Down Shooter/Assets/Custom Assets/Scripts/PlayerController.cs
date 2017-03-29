@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.ImageEffects;
 
+#pragma warning disable 0168
+
 public
 class PlayerController : MonoBehaviour {
   [System.Serializable] public class Sounds {
@@ -112,6 +114,8 @@ class PlayerController : MonoBehaviour {
  private
   float lastFootstepTime = 0.0f;
  private
+  float lastVignetteAmount = 0.0f;
+ private
   float deathTime = 0.0f;
  private
   Transform lastFloorTransform;
@@ -144,18 +148,16 @@ class PlayerController : MonoBehaviour {
 
   void Update() {
     if (isDead) {
-      if (Time.realtimeSinceStartup - deathTime >= 7f) {
+      if (Time.realtimeSinceStartup - deathTime >= 8f) {
         if (GameData.health > 0)
           GameData.restartLevel();
         else
           GameData.MainMenu();
-      } else if (Time.realtimeSinceStartup - deathTime >= 3f) {
-        Debug.Log("S");
-        Time.timeScale = 0.3f;
+      } else if (Time.realtimeSinceStartup - deathTime >= 5f) {
+        Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
       } else {
-        Debug.Log("SS");
-        Time.timeScale = 0.01f;
+        Time.timeScale = Mathf.Lerp(0.01f, 0.1f, (Time.realtimeSinceStartup - deathTime) / 3f);
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
       }
     }
@@ -253,7 +255,7 @@ class PlayerController : MonoBehaviour {
       }
       for (int i = (int)(staminaCountBars * staminaRemaining);
            i < staminaCountBars; i++) {
-        stamina.text += "!";
+        stamina.text += " ";
       }
     }
     if (timer != null) {
@@ -355,7 +357,7 @@ class PlayerController : MonoBehaviour {
                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)),
             1.0f) *
             CurrentCameraDistance;
-    if (GameData.cameraDamping) {
+    if (isDead || GameData.cameraDamping) {
       newCameraPos =
           Vector3.Lerp(Camera.transform.position, newCameraPos, 0.33f);
     }
@@ -373,6 +375,9 @@ class PlayerController : MonoBehaviour {
       Camera.transform.rotation =
           Quaternion.Euler(-75.0f, Camera.transform.eulerAngles.y, 0f);
     }
+    if (isDead && Ragdoll != null)
+      Camera.transform.LookAt(Ragdoll.GetComponent<Rigidbody>().velocity * 2f +
+                              Vector3.up * 1.2f);
 
     // VFX
     float vignette = 0.0f;
@@ -386,17 +391,17 @@ class PlayerController : MonoBehaviour {
       }
     }
     vignette = 0.45f - (enemydistance / 50f);
-    if (vignette >= 0) {
-      try {
-        Camera.GetComponent<VignetteAndChromaticAberration>().intensity =
-            vignette;
-      } catch (System.NullReferenceException e) {
-      }
-      RenderSettings.fogStartDistance = 200 * (1 - (vignette / 0.45f));
-      RenderSettings.fogEndDistance = 300 * (1 - (vignette / 0.45f));
-      RenderSettings.fogColor =
-          Color.Lerp(startColor, Color.red, (vignette / 0.45f));
+    vignette = Mathf.Lerp(lastVignetteAmount, vignette, 1.0f * Time.deltaTime);
+    lastVignetteAmount = vignette;
+    try {
+      Camera.GetComponent<VignetteAndChromaticAberration>().intensity =
+          vignette;
+    } catch (System.NullReferenceException e) {
     }
+    RenderSettings.fogStartDistance = 200 * (1 - (vignette / 0.45f));
+    RenderSettings.fogEndDistance = 300 * (1 - (vignette / 0.45f));
+    RenderSettings.fogColor =
+        Color.Lerp(startColor, Color.red, (vignette / 0.45f));
 
     // Sound
     if (isGrounded && Time.time - lastGroundedTime >= 0.05f &&
@@ -428,6 +433,7 @@ class PlayerController : MonoBehaviour {
   }
 
   void Dead() {
+    if(isDead) return;
     isDead = true;
     if (GameData.health <= 0) {
       PlaySound(sounds.LevelFail);
@@ -457,13 +463,13 @@ class PlayerController : MonoBehaviour {
   }
 
   void OnAnimatorIK() {
-    if (Mathf.Abs(rbody.velocity.x) > 0.01f ||
-        Mathf.Abs(rbody.velocity.z) > 0.01f) {
+    if (Mathf.Abs(rbody.velocity.x) > 0.02f ||
+        Mathf.Abs(rbody.velocity.z) > 0.02f) {
       turn = (moveAngle - anim.bodyRotation.eulerAngles.y) / 180f;
       while (turn < -1) turn += 2;
       while (turn > 1) turn -= 2;
     }
-    anim.SetFloat("Forward", forward * 1.1f);
+    anim.SetFloat("Forward", forward);
     anim.SetFloat("Turn", turn);
     anim.SetFloat("Jump", -9 + (Time.time - lastGroundedTime) * 9f);
     anim.SetFloat("JumpLeg", -1 + (Time.time - lastGroundedTime) * 4f);

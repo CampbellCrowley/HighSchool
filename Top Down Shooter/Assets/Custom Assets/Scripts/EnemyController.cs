@@ -79,6 +79,9 @@ class EnemyController : MonoBehaviour {
     if ((player.transform.position - projectilePlaceholder.transform.position)
             .magnitude <= 20f) {
       lastTargetPosition = target;
+      startPos = Vector3.MoveTowards(
+          startPos, player.transform.position + Vector3.up * 1.2f,
+          1.0f * Time.deltaTime);
     } else {
       lastTargetPosition =
           Quaternion.Euler(0, 1f, 0) *
@@ -96,9 +99,9 @@ class EnemyController : MonoBehaviour {
       // line.enabled = false;
       line.SetPosition(0, projectilePlaceholder.transform.position);
       line.SetPosition(1, projectilePlaceholder.transform.position +
-                              projectilePlaceholder.transform.forward * 20f);
+                              projectilePlaceholder.transform.forward * 10f);
       if (line != null && raycast.transform != null) {
-        if (raycast.transform.gameObject == player) {
+        if (raycast.transform.gameObject == player && raycast.distance <= 10f) {
           // line.enabled = true;
           shoot = true;
           lastShotTime -= (10 - raycast.distance) / 20f;
