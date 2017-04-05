@@ -2113,8 +2113,11 @@ public class TerrainGenerator : MonoBehaviour {
   }
   // Returns the height of the terrain at the player's current location in
   // global units.
+  public float GetTerrainHeight() {
+    return GetTerrainHeight(player.GetComponent<InitPlayer>());
+  }
  public
-  float GetTerrainHeight() {
+  float GetTerrainHeight(InitPlayer player) {
     int xCenter = Mathf.RoundToInt(
         (player.transform.position.x - terrWidth / 2) / terrWidth);
     int yCenter = Mathf.RoundToInt(
@@ -2128,11 +2131,17 @@ public class TerrainGenerator : MonoBehaviour {
     }
     return 0;
   }
+  public void movePlayerToTop() {
+    movePlayerToTop(player.GetComponent<InitPlayer>());
+  }
+  public void movePlayerToTop(GameObject player) {
+    movePlayerToTop(player.GetComponent<InitPlayer>());
+  }
  public
-  void movePlayerToTop() {
+  void movePlayerToTop(InitPlayer player) {
     // Make sure the player stays above the terrain
     if (player != null) {
-      (player.GetComponent<InitPlayer>())
+      player
           .updatePosition(player.transform.position.x, GetTerrainHeight(),
                           player.transform.position.z);
     }

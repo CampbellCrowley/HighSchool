@@ -243,7 +243,7 @@ class PlayerController : MonoBehaviour {
     // HUD
     if (collectedCounter != null) {
       collectedCounter.text =
-          GameData.collectedCollectibles + " Items";
+          GameData.collectedCollectibles + " Ammo";
     }
     if (lifeCounter != null) {
       lifeCounter.text = GameData.health + " Health";
@@ -357,7 +357,10 @@ class PlayerController : MonoBehaviour {
                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)),
             1.0f) *
             CurrentCameraDistance;
-    if (isDead || GameData.cameraDamping) {
+    if (isDead) {
+      newCameraPos =
+          Vector3.Lerp(Camera.transform.position, newCameraPos, 0.05f);
+    } else if (GameData.cameraDamping) {
       newCameraPos =
           Vector3.Lerp(Camera.transform.position, newCameraPos, 0.33f);
     }
@@ -447,7 +450,7 @@ class PlayerController : MonoBehaviour {
       Ragdoll.SetActive(true);
       Ragdoll.transform.position = transform.position;
       Ragdoll.transform.rotation = transform.rotation;
-      Ragdoll.GetComponent<Rigidbody>().velocity = rbody.velocity;
+      Ragdoll.GetComponent<Rigidbody>().velocity = /*rbody.velocity*/ Vector3.zero;
       foreach (SkinnedMeshRenderer renderer in
                    GetComponentsInChildren<SkinnedMeshRenderer>()) {
         renderer.enabled = false;

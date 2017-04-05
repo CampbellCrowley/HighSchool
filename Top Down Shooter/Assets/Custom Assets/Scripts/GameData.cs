@@ -39,15 +39,18 @@ class GameData : MonoBehaviour {
   static bool levelComplete() {
     return collectedCollectibles >= neededCollectibles;
   }
+
+  // UI.Button requires that the function it calls not be static, but static
+  // functions make the rest of my code easier so this is only used in the UI.
  public
   void NextLevel() {
-    collectedCollectibles = 0;
+    collectedCollectibles = 100;
     Debug.Log("Next Level!");
     SceneManager.LoadScene(getLevel() + 1);
   }
  public
   static void nextLevel() {
-    collectedCollectibles = 0;
+    collectedCollectibles = 100;
     Debug.Log("Next Level!");
     SceneManager.LoadScene(getLevel() + 1);
   }
@@ -71,6 +74,7 @@ class GameData : MonoBehaviour {
  public
   void Update() {
     Cursor.visible = showCursor;
+    Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
     if (Input.GetAxis("Skip") > 0.5f) {
       Debug.Log("Skip Button Pressed.");
       nextLevel();

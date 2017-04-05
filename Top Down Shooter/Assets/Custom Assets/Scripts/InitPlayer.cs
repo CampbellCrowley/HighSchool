@@ -6,8 +6,8 @@ class InitPlayer : MonoBehaviour {
   // Height off the ground to spawn
   [SerializeField] public float spawnHeight = 2;
   [SerializeField] public float moveSpeed = 2;
-  [SerializeField] public TerrainGenerator ground;
   [SerializeField] public bool isMainMenu = false;
+  [SerializeField] public TerrainGenerator ground;
 
  private
   bool spawned = false;
@@ -32,10 +32,12 @@ class InitPlayer : MonoBehaviour {
   void Update() {
     if (!isMainMenu) return;
     if (ground != null) {
+      float groundHeight = ground.GetTerrainHeight(this) + 50f;
+      if(groundHeight == 50f) groundHeight = transform.position.y;
       transform.position += Vector3.forward * Time.deltaTime * moveSpeed;
       transform.position =
-          Mathf.Lerp(transform.position.y, ground.GetTerrainHeight() + 50f,
-                     3.0f * Time.deltaTime) *
+          Mathf.Lerp(transform.position.y, groundHeight,
+                     1.0f * Time.deltaTime) *
               Vector3.up +
           transform.position.x * Vector3.right +
           transform.position.z * Vector3.forward;

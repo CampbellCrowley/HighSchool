@@ -54,7 +54,12 @@ class EnemyController : MonoBehaviour {
     line.endWidth = 0.01f;
   }
  public
-  void kill() { Destroy(gameObject); }
+  void kill() {
+    if(GameData.numEnemies-1 <= 0) {
+      GameData.nextLevel();
+    }
+    Destroy(gameObject);
+  }
  public
   void Update() {
     transform.position = Vector3.Lerp(startPos, startPos + Vector3.forward * 3,
