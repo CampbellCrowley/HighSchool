@@ -19,6 +19,7 @@ class EnemyController : MonoBehaviour {
 
  private
   GameObject player;
+ private TerrainGenerator ground;
  private
   LineRenderer line;
  private
@@ -41,6 +42,7 @@ class EnemyController : MonoBehaviour {
   void Start() {
     health = StartHealth;
     player = GameObject.FindGameObjectsWithTag("Player")[0];
+    ground = GameObject.FindObjectOfType<TerrainGenerator>();
     startPos = transform.position;
     lastTargetPosition = projectilePlaceholder.transform.position;
     lastPosition = transform.position;
@@ -67,6 +69,9 @@ class EnemyController : MonoBehaviour {
     transform.position =
         Vector3.Lerp(transform.position, transform.position + Vector3.left * 3,
                      Mathf.Abs(Time.time % 3 - 2));
+    if(ground!=null) {
+      transform.position = new Vector3(transform.position.x, ground.GetTerrainHeight(gameObject) + 1f, transform.position.z);
+    }
     if (health == 0) {
       GetComponent<MeshRenderer>().material.color = Color.red;
     } else if (health == 1) {
@@ -142,7 +147,11 @@ class EnemyController : MonoBehaviour {
     if (Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10 &&
         spawnChildren) {
       lastSpawnTime = Time.time;
-      Instantiate(gameObject);
+      Vector3 spawnPosition = player.transform.position + new Vector3(Random.Range(-100f, 100f), transform.position.y, Random.Range(-100f, 100f));
+      Instantiate(gameObject, spawnPosition, Quaternion.identity);
+    }
+    if(spawnChildren && Vector3.Distance(transform.position, player.transform.position) > 150f) {
+      Destroy(gameObject);
     }
   }
 

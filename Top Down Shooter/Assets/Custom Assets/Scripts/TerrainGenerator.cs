@@ -96,6 +96,8 @@ public class Terrains {
   public float[, ] terrPoints;
   [Tooltip("List of terrain heightmap data points for setting heights over a period of time from the Perlin generator.")]
   public float[, ] terrPerlinPoints;
+  [Tooltip("The water GameObject attatched to this chunk.")]
+  public GameObject waterTile;
   [Tooltip("Whether this terrain chunk is ready for its textures to be updated.")]
   public bool texQueue = false;
   [Tooltip("Whether this terrain chunk is ready to be updated with points in terrPoints. True if points need to be flushed to terrainData.")]
@@ -290,7 +292,8 @@ public class TerrainGenerator : MonoBehaviour {
             + ")");
 #endif
 
-    // Remove all undefined chunks from the array because they have been unloaded.
+    // Remove all undefined chunks from the array because they have been
+    // unloaded.
     for (int i = 0; i < terrains.Count; i++) {
       if (!terrains[i].terrList) {
         terrains.RemoveAt(i);
@@ -720,11 +723,12 @@ public class TerrainGenerator : MonoBehaviour {
                                   .terrList.GetComponent<Terrain>()
                                   .transform.position;
         Vector3 waterVector3 = terrVector3;
-        waterVector3.y += 150;
+        waterVector3.y += 194;
         waterVector3.x += terrWidth / 2;
         waterVector3.z += terrLength / 2;
-        Instantiate(waterTile, waterVector3, Quaternion.identity,
-                    terrains[terrains.Count - 1].terrList.transform);
+        terrains[terrains.Count - 1].waterTile =
+            Instantiate(waterTile, waterVector3, Quaternion.identity,
+                        terrains[terrains.Count - 1].terrList.transform);
       }
       times.DeltaGenerateWater = (Time.realtimeSinceStartup - iTime2) * 1000;
 
@@ -808,8 +812,9 @@ public class TerrainGenerator : MonoBehaviour {
     UnloadTerrainChunk(GetTerrainWithCoord(X, Z));
   }
   void UnloadTerrainChunk(int loc) {
-    if (loc == 0) return;
+    if (loc == 0) return; // Spawn chunk may not be unloaded.
     Destroy(terrains[loc].terrList);
+    Destroy(terrains[loc].waterTile);
     terrains.RemoveAt(loc);
     if (GetTerrainWithData(lastTerrUpdated) == loc) {
       lastTerrUpdateLoc = -1;
@@ -2114,10 +2119,10 @@ public class TerrainGenerator : MonoBehaviour {
   // Returns the height of the terrain at the player's current location in
   // global units.
   public float GetTerrainHeight() {
-    return GetTerrainHeight(player.GetComponent<InitPlayer>());
+    return GetTerrainHeight(player);
   }
  public
-  float GetTerrainHeight(InitPlayer player) {
+  float GetTerrainHeight(GameObject player) {
     int xCenter = Mathf.RoundToInt(
         (player.transform.position.x - terrWidth / 2) / terrWidth);
     int yCenter = Mathf.RoundToInt(

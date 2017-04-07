@@ -32,11 +32,12 @@ class InitPlayer : MonoBehaviour {
   void Update() {
     if (!isMainMenu) return;
     if (ground != null) {
-      float groundHeight = ground.GetTerrainHeight(this) + 50f;
-      if(groundHeight == 50f) groundHeight = transform.position.y;
+      float groundHeight = ground.GetTerrainHeight(gameObject);
+      if(groundHeight == 0f) groundHeight = transform.position.y;
+      else if(groundHeight <= 194f) groundHeight = 194f;
       transform.position += Vector3.forward * Time.deltaTime * moveSpeed;
       transform.position =
-          Mathf.Lerp(transform.position.y, groundHeight,
+          Mathf.Lerp(transform.position.y, groundHeight + 50f,
                      1.0f * Time.deltaTime) *
               Vector3.up +
           transform.position.x * Vector3.right +

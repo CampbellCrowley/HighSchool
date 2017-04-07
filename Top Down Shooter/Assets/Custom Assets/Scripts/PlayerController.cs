@@ -73,7 +73,9 @@ class PlayerController : MonoBehaviour {
  [Header("Misc.")]
  public
   float GameTime = 10f;
- public
+public
+ GameObject RagdollTemplate;
+ private
   GameObject Ragdoll;
  public
   bool isDead = false;
@@ -157,7 +159,8 @@ class PlayerController : MonoBehaviour {
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
       } else {
-        Time.timeScale = Mathf.Lerp(0.01f, 0.1f, (Time.realtimeSinceStartup - deathTime) / 3f);
+        Time.timeScale = Mathf.Lerp(
+            0.01f, 0.1f, (Time.realtimeSinceStartup - deathTime) / 3f);
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
       }
     }
@@ -341,7 +344,7 @@ class PlayerController : MonoBehaviour {
       }
     }
     Vector3 newCameraPos =
-        transform.position + Vector3.up * 2f +
+        Vector3.up * 2f +
         Vector3.ClampMagnitude(
             (Vector3.left *
                  (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
@@ -357,6 +360,11 @@ class PlayerController : MonoBehaviour {
                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)),
             1.0f) *
             CurrentCameraDistance;
+    if(!isDead) {
+      newCameraPos += transform.position;
+    } else {
+      newCameraPos += Ragdoll.transform.position;
+    }
     if (isDead) {
       newCameraPos =
           Vector3.Lerp(Camera.transform.position, newCameraPos, 0.05f);
@@ -378,9 +386,20 @@ class PlayerController : MonoBehaviour {
       Camera.transform.rotation =
           Quaternion.Euler(-75.0f, Camera.transform.eulerAngles.y, 0f);
     }
-    if (isDead && Ragdoll != null)
-      Camera.transform.LookAt(Ragdoll.GetComponent<Rigidbody>().velocity * 2f +
-                              Vector3.up * 1.2f);
+    if (isDead && Ragdoll != null) {
+      Transform[] children = Ragdoll.GetComponentsInChildren<Transform>();
+      Transform target = transform;
+      target.position += Vector3.up * 1.2f;
+      foreach (Transform target_ in children) {
+        if (target_.name.Contains("Head")) {
+          target = target_;
+          break;
+        }
+      }
+      Quaternion startRot = Camera.transform.rotation;
+      Camera.transform.LookAt(target.position + Vector3.up * 0.2f);
+      Camera.transform.rotation = Quaternion.Lerp(startRot, Camera.transform.rotation, 0.1f);
+    }
 
     // VFX
     float vignette = 0.0f;
@@ -444,13 +463,25 @@ class PlayerController : MonoBehaviour {
       PlaySound(sounds.Pain);
     }
     MaxCameraDistance *= 2f;
+        Time.timeScale = 0f;
+        Time.fixedDeltaTime = 0.02f * Time.timeScale;
     deathTime = Time.realtimeSinceStartup;
     GetComponent<Rigidbody>().isKinematic = true;
-    if(Ragdoll != null) {
+    if(RagdollTemplate != null) {
+      Ragdoll = Instantiate(RagdollTemplate);
       Ragdoll.SetActive(true);
       Ragdoll.transform.position = transform.position;
       Ragdoll.transform.rotation = transform.rotation;
-      Ragdoll.GetComponent<Rigidbody>().velocity = /*rbody.velocity*/ Vector3.zero;
+      foreach(Transform parent in GetComponentsInChildren<Transform>()) {
+        foreach (
+            Transform ragdoll in Ragdoll.GetComponentsInChildren<Transform>()) {
+          if (ragdoll.name.Equals(parent.name)) {
+            ragdoll.gameObject.transform.position = parent.position;
+            ragdoll.gameObject.transform.rotation = parent.rotation;
+          }
+        }
+      }
+      Ragdoll.GetComponent<Rigidbody>().velocity = rbody.velocity;
       foreach (SkinnedMeshRenderer renderer in
                    GetComponentsInChildren<SkinnedMeshRenderer>()) {
         renderer.enabled = false;
@@ -471,6 +502,8 @@ class PlayerController : MonoBehaviour {
       turn = (moveAngle - anim.bodyRotation.eulerAngles.y) / 180f;
       while (turn < -1) turn += 2;
       while (turn > 1) turn -= 2;
+    } else {
+      turn = 0f;
     }
     anim.SetFloat("Forward", forward);
     anim.SetFloat("Turn", turn);
@@ -490,7 +523,10 @@ class PlayerController : MonoBehaviour {
     } else if (other.gameObject.CompareTag("Enemy")) {
       GameData.health--;
       Dead();
-      // other.gameObject.transform.position += Vector3.up * 2f;
+    } else if (other.gameObject.CompareTag("EnemyProjectile")) {
+      Destroy(other.gameObject);
+      GameData.health--;
+      Dead();
     } else if (other.gameObject.CompareTag("Portal")) {
       if(GameData.levelComplete()) {
         GameData.nextLevel();
