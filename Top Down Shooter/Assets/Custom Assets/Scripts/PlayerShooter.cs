@@ -2,21 +2,38 @@ using UnityEngine;
 
 public
 class PlayerShooter : MonoBehaviour {
+  [System.Serializable] public class Sounds {
+   public
+    AudioPlayer Player;
+   public
+    AudioClip Sound1;
+   public
+    AudioClip Sound2;
+   public
+    AudioClip Sound3;
+  }
+
  public
   Projectile projectilePlaceholder;
  public
   float projectile_speed;
  private
   float lastShotTime = 0;
+ public
+  GUIText weaponDisplay;
  private
   LineRenderer line;
  private
   GameObject player;
+ private
+  int weapon = 1;
+ public
+  Sounds sounds;
 
  public
   void Start() {
     if (projectilePlaceholder == null) {
-      Debug.LogWarning(
+      Debug.LogError(
           "PlayerShooter does not have a projectile placeholder and " +
           "therefore will not work");
     } else {
@@ -41,12 +58,35 @@ class PlayerShooter : MonoBehaviour {
   void Update() {
     if (projectilePlaceholder == null) return;
     if (player.GetComponent<PlayerController>().isDead) return;
+
     float shoot = Input.GetAxis("Fire1");
-    float shoot2 = Input.GetAxis("Fire2");
-    if (shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
+    if(Input.GetKey("1")) weapon = 1;
+    if(Input.GetKey("2")) weapon = 2;
+    if(Input.GetKey("3")) weapon = 3;
+
+    if(weaponDisplay != null) {
+      weaponDisplay.text = "Weapon: ";
+      switch (weapon) {
+        case 1:
+          weaponDisplay.text += "Primary";
+          break;
+        case 2:
+          weaponDisplay.text += "Secondary";
+          break;
+        case 3:
+          weaponDisplay.text += "Tertiary";
+          break;
+        default:
+          weaponDisplay.text += "None";
+          break;
+      }
+    }
+
+    if (weapon == 1 && shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
         GameData.collectedCollectibles > 0) {
-      GameData.collectedCollectibles--;
+      //GameData.collectedCollectibles--;
       lastShotTime = Time.time;
+      PlaySound(sounds.Sound1);
       Projectile projectile = Instantiate(
           projectilePlaceholder, projectilePlaceholder.transform.position,
           projectilePlaceholder.transform.rotation, transform);
@@ -56,9 +96,10 @@ class PlayerShooter : MonoBehaviour {
       Physics.IgnoreCollision(player.GetComponent<CapsuleCollider>(),
                               projectile.GetComponent<CapsuleCollider>());
       projectile.transform.parent = null;
-    } else if (shoot2 > 0.5f && Time.time - lastShotTime > 0.225f &&
+    } else if (weapon == 2 && shoot > 0.5f && Time.time - lastShotTime > 0.225f &&
                GameData.collectedCollectibles > 0) {
-      GameData.collectedCollectibles -= 2;
+      //GameData.collectedCollectibles -= 2;
+      PlaySound(sounds.Sound2);
       lastShotTime = Time.time;
       RaycastHit raycast;
       Physics.Raycast(projectilePlaceholder.transform.position,
@@ -83,9 +124,30 @@ class PlayerShooter : MonoBehaviour {
         line.SetPosition(1, projectilePlaceholder.transform.position +
                                 transform.rotation * (Vector3.forward * 10f));
       }
+    } else if (weapon == 3 && shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
+               GameData.collectedCollectibles > 0) {
+      //GameData.collectedCollectibles--;
+      PlaySound(sounds.Sound3);
+      lastShotTime = Time.time;
+      Projectile projectile = Instantiate(
+          projectilePlaceholder, projectilePlaceholder.transform.position,
+          projectilePlaceholder.transform.rotation, transform);
+      projectile.placeholder = false;
+      projectile.GetComponent<Rigidbody>().velocity =
+          transform.rotation * (Vector3.forward * projectile_speed);
+      Physics.IgnoreCollision(player.GetComponent<CapsuleCollider>(),
+                              projectile.GetComponent<CapsuleCollider>());
+      projectile.GetComponent<Rigidbody>().useGravity = true;
+      projectile.transform.parent = null;
     }
     if (line != null && Time.time - lastShotTime > 0.1f) {
       line.enabled = false;
+    }
+  }
+  void PlaySound(AudioClip clip) {
+    if (sounds.Player != null && clip != null && GameData.soundEffects) {
+      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      player.clip = clip;
     }
   }
 }

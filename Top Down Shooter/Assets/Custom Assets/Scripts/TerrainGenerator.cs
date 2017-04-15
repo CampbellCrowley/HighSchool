@@ -223,7 +223,7 @@ public class TerrainGenerator : MonoBehaviour {
     Debug.Log("Applying spawn chunk height map");
     terrains[0].terrData.SetHeights(0, 0, MixHeights(0));
     terrains[0].terrQueue = false;
-    terrains[0].texQueue = true;
+    terrains[0].texQueue = false;
     terrains[0].terrReady = true;
     // Load chunks before player spawns to hide chunk loading. (Deprecated)
     for (int x = 0; x < maxX; x++) {
@@ -691,7 +691,7 @@ public class TerrainGenerator : MonoBehaviour {
           new float[ terrWidth, terrLength ];
       terrains[terrains.Count - 1].terrPerlinPoints =
           new float[ terrWidth, terrLength ];
-      UpdateTexture(terrains[terrains.Count - 1].terrData);
+      //UpdateTexture(terrains[terrains.Count - 1].terrData);
       terrains[terrains.Count - 1].terrList.name =
           "Terrain(" + cntX + "," + cntZ + ")";
 #if DEBUG_MISC

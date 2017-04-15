@@ -8,16 +8,18 @@ class GameData : MonoBehaviour {
  public
   static GameData Instance;
  public
-  static AudioSource MusicPlayer;
+  AudioSource MusicPlayer;
  public
   void Awake() {
     if (Instance == null) {
+      MusicPlayer = GetComponent<AudioSource>();
       DontDestroyOnLoad(gameObject);
       Instance = this;
     } else if (Instance != this) {
       Destroy(gameObject);
+      Instance.MusicPlayer.clip = GetComponent<AudioSource>().clip;
+      Instance.MusicPlayer.Play();
     }
-    MusicPlayer = GetComponent<AudioSource>();
   }
  public
   static int collectedCollectibles = 100;
@@ -57,7 +59,7 @@ class GameData : MonoBehaviour {
  public
   static void restartLevel() {
     Debug.Log("Restarting Level!");
-    collectedCollectibles = 0;
+    collectedCollectibles = 100;
     SceneManager.LoadScene(getLevel());
   }
  public

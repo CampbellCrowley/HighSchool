@@ -64,14 +64,22 @@ class EnemyController : MonoBehaviour {
   }
  public
   void Update() {
+    // The enemy moves in a triangle pattern in respect to time and it's
+    // starting position.
     transform.position = Vector3.Lerp(startPos, startPos + Vector3.forward * 3,
                                       Mathf.Abs(Time.time % 3 - 1));
     transform.position =
         Vector3.Lerp(transform.position, transform.position + Vector3.left * 3,
                      Mathf.Abs(Time.time % 3 - 2));
+
+    // Keep the enemy a constant distance off the ground.
     if(ground!=null) {
-      transform.position = new Vector3(transform.position.x, ground.GetTerrainHeight(gameObject) + 1f, transform.position.z);
+      transform.position = new Vector3(transform.position.x,
+                                       ground.GetTerrainHeight(gameObject) + 1f,
+                                       transform.position.z);
     }
+
+    // Change the enemy's color to show remaining health.
     if (health == 0) {
       GetComponent<MeshRenderer>().material.color = Color.red;
     } else if (health == 1) {
@@ -83,9 +91,12 @@ class EnemyController : MonoBehaviour {
       GetComponent<MeshRenderer>().material.color = Color.white;
     }
 
+    // Move the point at which the enemy is aiming towards the player with
+    // damping.
     Vector3 target = Vector3.Lerp(player.transform.position + Vector3.up * 1.2f,
                                   lastTargetPosition, 55.0f * Time.deltaTime);
     projectilePlaceholder.transform.LookAt(target);
+    // If the player is close enough, slowly move the enemy towards the player.
     if ((player.transform.position - projectilePlaceholder.transform.position)
             .magnitude <= 20f) {
       lastTargetPosition = target;
@@ -99,6 +110,9 @@ class EnemyController : MonoBehaviour {
     }
     lastPosition = transform.position;
 
+    // Raycasting means the enemy is checking to make sure the player is close,
+    // and there are no obstacles between the player and the enemy, before
+    // shooting.
     if (isRaycasting) {
       RaycastHit raycast;
       Physics.Raycast(projectilePlaceholder.transform.position,
@@ -106,27 +120,29 @@ class EnemyController : MonoBehaviour {
                       ~(1 << 2));
 
       shoot = false;
-      // line.enabled = false;
       line.SetPosition(0, projectilePlaceholder.transform.position);
       line.SetPosition(1, projectilePlaceholder.transform.position +
                               projectilePlaceholder.transform.forward * 10f);
       if (line != null && raycast.transform != null) {
         if (raycast.transform.gameObject == player && raycast.distance <= 10f) {
-          // line.enabled = true;
           shoot = true;
           lastShotTime -= (10 - raycast.distance) / 20f;
         }
       }
     }
+
+    // Keep the gun and gameObject pointed in the same direction as the
+    // projectilePlaceholder with some damping.
     projectileGun.transform.rotation =
         projectilePlaceholder.transform.rotation * Quaternion.Euler(180f, 0, 0);
-
     Quaternion rotationOffset = Quaternion.Euler(0f, 0f, 90f);
     transform.rotation =
         Quaternion.Lerp(lastRotation, projectileGun.transform.rotation, 0.1f) *
         rotationOffset;
     lastRotation = transform.rotation * Quaternion.Inverse(rotationOffset);
 
+    // Shoot a projectile towards the player at an interval and if raycasting,
+    // then only when the player is close enough.
     if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
       lastShotTime = Time.time;
       Projectile projectile = Instantiate(
@@ -144,13 +160,20 @@ class EnemyController : MonoBehaviour {
                               projectile.GetComponent<Collider>());
       projectile.transform.parent = null;
     }
-    if (Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10 &&
+
+    // Spawn a copy at a random location around the player.
+    if (Time.time - lastSpawnTime > 5.0f && GameData.numEnemies < 50 &&
         spawnChildren) {
       lastSpawnTime = Time.time;
-      Vector3 spawnPosition = player.transform.position + new Vector3(Random.Range(-100f, 100f), transform.position.y, Random.Range(-100f, 100f));
+      Vector3 spawnPosition =
+          player.transform.position + new Vector3(Random.Range(-100f, 100f),
+                                                  transform.position.y,
+                                                  Random.Range(-100f, 100f));
       Instantiate(gameObject, spawnPosition, Quaternion.identity);
     }
-    if(spawnChildren && Vector3.Distance(transform.position, player.transform.position) > 150f) {
+    if (spawnChildren &&
+        Vector3.Distance(transform.position, player.transform.position) >
+            150f) {
       Destroy(gameObject);
     }
   }

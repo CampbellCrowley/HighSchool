@@ -173,7 +173,6 @@ class MenuController : MonoBehaviour {
  public
   void ToggleMusic() {
     GameData.music = !GameData.music;
-    Debug.Log("Toggled Music");
   }
  public
   void ToggleCameraDamping() {

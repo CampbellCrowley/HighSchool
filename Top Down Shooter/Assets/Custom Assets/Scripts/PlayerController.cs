@@ -102,6 +102,8 @@ public
  private
   bool isSprinting = false;
  private
+  bool isUnderwater = false;
+ private
   float endTime = 0f;
  private
   float levelStartTime = 0f;
@@ -117,6 +119,8 @@ public
   float lastFootstepTime = 0.0f;
  private
   float lastVignetteAmount = 0.0f;
+ private
+  float lastSprintInput = 0.0f;
  private
   float deathTime = 0.0f;
  private
@@ -167,13 +171,7 @@ public
   }
 
   void FixedUpdate() {
-
-    if(transform.position.y < -100f) {
-      transform.position += Vector3.up * 110f;
-      rbody.velocity = Vector3.zero;
-    }
-
-    // Inputs
+    // Inputs and Player Controls
     float moveHorizontal = Input.GetAxis("Horizontal");
     float moveVertical = Input.GetAxis("Vertical");
     float lookHorizontal = Input.GetAxis("Mouse X");
@@ -186,8 +184,16 @@ public
     float sprintInput = Input.GetAxis("Sprint");
     isSprinting =
         (sprintInput > 0.5 && !isCrouched) || (isSprinting && !isGrounded);
+    bool wasUnderwater = isUnderwater;
+    isUnderwater = transform.position.y < 193f;
+
+    if (wasUnderwater && !isUnderwater) lastGroundedTime = Time.time;
+    if (isUnderwater) isGrounded = false;
 
     // Standing on platform
+    // This is necessary to ensure the player moves with the platform they are
+    // standing on. The position obtained from this is used to offset the
+    // player's position.
     if (lastFloorTransform == null ||
         hitinfo.transform != null &&
             hitinfo.transform.name != lastFloorTransform.name) {
@@ -229,10 +235,12 @@ public
     }
     if (staminaRemaining <= 0) {
       isSprinting = false;
+      sprintInput = lastSprintInput -= Time.deltaTime;
     } else if (isGrounded && isSprinting &&
                (moveHorizontal != 0 || moveVertical != 0)) {
       staminaRemaining -= staminaDepletionRate * Time.deltaTime;
     }
+    lastSprintInput = sprintInput;
 
     // Start countdown once player moves.
     if (!(moveHorizontal == 0 && moveVertical == 0 && !jump) && endTime == 0f) {
@@ -288,7 +296,7 @@ public
     // Movement
     Vector3 movement =
         moveHorizontal * Vector3.right + moveVertical * Vector3.forward;
-    Vector3.ClampMagnitude(movement, 1.0f);
+    movement = Vector3.ClampMagnitude(movement, 1.0f);
     if (isCrouched) {
       forward = movement.magnitude;
       movement *= moveSpeed * 0.5f;
@@ -296,9 +304,21 @@ public
       forward = movement.magnitude / Mathf.Lerp(2.5f, 1.0f, sprintInput);
       movement *= moveSpeed * Mathf.Lerp(1.0f, 2.5f, sprintInput);
     }
-    movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
-                 (rbody.velocity.y - 9.81f * Time.deltaTime)) *
-                Vector3.up;
+
+    if (isUnderwater) {
+      if(transform.position.y < 192f) {
+        movement += Mathf.Clamp(rbody.velocity.y + 5.0f * 2f * Time.deltaTime,
+                                -moveSpeed, moveSpeed) *
+                    Vector3.up;
+      } else {
+        movement +=
+            (rbody.velocity.y - 9.81f * 3f * Time.deltaTime) * Vector3.up;
+      }
+    } else {
+      movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
+                   (rbody.velocity.y - 9.81f * 2f * Time.deltaTime)) *
+                  Vector3.up;
+    }
     movement =
         Quaternion.Euler(0, Camera.transform.eulerAngles.y, 0) * movement;
     rbody.velocity = Vector3.Lerp(movement, rbody.velocity, 0.5f);
@@ -360,7 +380,7 @@ public
                  Mathf.Sin(Camera.transform.eulerAngles.x / 180f * Mathf.PI)),
             1.0f) *
             CurrentCameraDistance;
-    if(!isDead) {
+    if(!isDead || Ragdoll == null) {
       newCameraPos += transform.position;
     } else {
       newCameraPos += Ragdoll.transform.position;
@@ -420,10 +440,18 @@ public
           vignette;
     } catch (System.NullReferenceException e) {
     }
-    RenderSettings.fogStartDistance = 200 * (1 - (vignette / 0.45f));
-    RenderSettings.fogEndDistance = 300 * (1 - (vignette / 0.45f));
-    RenderSettings.fogColor =
-        Color.Lerp(startColor, Color.red, (vignette / 0.45f));
+    if (Camera.transform.position.y > 194f) {
+      RenderSettings.fogStartDistance = 300 * (1 - (vignette / 0.45f));
+      RenderSettings.fogEndDistance = 500 * (1 - (vignette / 0.45f));
+      RenderSettings.fogColor =
+          Color.Lerp(startColor, Color.red, (vignette / 0.45f));
+    } else {  // Underwater
+      RenderSettings.fogStartDistance =
+          Mathf.Lerp(RenderSettings.fogStartDistance, 0f, 0.5f);
+      RenderSettings.fogEndDistance =
+          Mathf.Lerp(RenderSettings.fogEndDistance, 30f, 0.5f);
+      RenderSettings.fogColor = (Color.blue + Color.white) / 2;
+    }
 
     // Sound
     if (isGrounded && Time.time - lastGroundedTime >= 0.05f &&
@@ -458,9 +486,9 @@ public
     if(isDead) return;
     isDead = true;
     if (GameData.health <= 0) {
-      PlaySound(sounds.LevelFail);
+      PlaySound(sounds.LevelFail, 1.0f);
     } else {
-      PlaySound(sounds.Pain);
+      PlaySound(sounds.Pain, 1.0f);
     }
     MaxCameraDistance *= 2f;
         Time.timeScale = 0f;
@@ -507,8 +535,14 @@ public
     }
     anim.SetFloat("Forward", forward);
     anim.SetFloat("Turn", turn);
-    anim.SetFloat("Jump", -9 + (Time.time - lastGroundedTime) * 9f);
-    anim.SetFloat("JumpLeg", -1 + (Time.time - lastGroundedTime) * 4f);
+    if (!isUnderwater) {
+      anim.SetFloat("Jump", -9 + (Time.time - lastGroundedTime) * 9f);
+      anim.SetFloat("JumpLeg", -1 + (Time.time - lastGroundedTime) * 4f);
+    } else {
+      anim.SetFloat("Jump", Mathf.Abs((Time.time * 200f % 200f - 100) / 200f));
+      anim.SetFloat("JumpLeg",
+                    Mathf.Abs((Time.time * 200f % 400f - 200) / 400f));
+    }
     anim.SetBool("OnGround", (Time.time - lastGroundedTime <= 0.05f));
     anim.SetBool("Crouch", isCrouched);
   }
@@ -533,13 +567,13 @@ public
       }
     }
   }
-  void PlaySound(AudioClip clip) {
-    if (sounds.Player != null && GameData.soundEffects) {
+  void PlaySound(AudioClip clip, float volume = -1f) {
+    if (sounds.Player != null && clip != null && GameData.soundEffects) {
       AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
-      if (sounds.CollectibleSound != null)
-        player.clip = clip;
-      else
-        Destroy(player.gameObject);
+      player.clip = clip;
+      if (volume >= 0f && volume <= 1f) {
+        player.volume = volume;
+      }
     }
   }
 }
