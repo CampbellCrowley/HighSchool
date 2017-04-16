@@ -5,6 +5,10 @@ class Projectile : MonoBehaviour {
  public
   float lifespan = 3.0f;
  public
+  bool bomb = false;
+ public
+  GameObject Explosion;
+ public
   bool placeholder = false;
  private
   float birth;
@@ -29,9 +33,17 @@ class Projectile : MonoBehaviour {
       GetComponent<Collider>().enabled = true;
     }
   }
+ private
+  void Explode() {
+    if (Explosion == null) return;
+    GameObject explosion =
+        Instantiate(Explosion, transform.position, Quaternion.identity);
+    explosion.transform.parent = null;
+  }
  public
   void Update() {
     if (Time.time - birth > lifespan && !placeholder) {
+      if (bomb) Explode();
       Destroy(gameObject);
     } else if(Time.time - birth > 0.5 && !placeholder) {
       GetComponent<MeshRenderer>().enabled = true;

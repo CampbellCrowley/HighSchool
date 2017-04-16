@@ -159,13 +159,14 @@ public
           GameData.restartLevel();
         else
           GameData.MainMenu();
-      } else if (Time.realtimeSinceStartup - deathTime >= 5f) {
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
-      } else {
-        Time.timeScale = Mathf.Lerp(
-            0.01f, 0.1f, (Time.realtimeSinceStartup - deathTime) / 3f);
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+      //} else if (Time.realtimeSinceStartup - deathTime >= 5f) {
+      //  Time.timeScale = 1f;
+      //  Time.fixedDeltaTime = 0.02f * Time.timeScale;
+       } else {
+         Time.timeScale = Mathf.Lerp(
+             //0.05f, 0.1f, (Time.realtimeSinceStartup - deathTime) / 3f);
+             0.05f, 1.0f, (Time.realtimeSinceStartup - deathTime) / 8f);
+         Time.fixedDeltaTime = 0.02f * Time.timeScale;
       }
     }
   }
@@ -254,7 +255,7 @@ public
     // HUD
     if (collectedCounter != null) {
       collectedCounter.text =
-          GameData.collectedCollectibles + " Ammo";
+          "Bombs Remaining: " + GameData.collectedCollectibles;
     }
     if (lifeCounter != null) {
       lifeCounter.text = GameData.health + " Health";
@@ -491,8 +492,6 @@ public
       PlaySound(sounds.Pain, 1.0f);
     }
     MaxCameraDistance *= 2f;
-        Time.timeScale = 0f;
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
     deathTime = Time.realtimeSinceStartup;
     GetComponent<Rigidbody>().isKinematic = true;
     if(RagdollTemplate != null) {
@@ -555,12 +554,20 @@ public
       GameData.collectedCollectibles+=10;
       PlaySound(sounds.CollectibleSound);
     } else if (other.gameObject.CompareTag("Enemy")) {
-      GameData.health--;
-      Dead();
+      if (GameData.getLevel() == 3) {
+        GameData.nextLevel();
+      } else {
+        GameData.health--;
+        Dead();
+      }
     } else if (other.gameObject.CompareTag("EnemyProjectile")) {
       Destroy(other.gameObject);
-      GameData.health--;
-      Dead();
+      if (GameData.getLevel() == 3) {
+        GameData.nextLevel();
+      } else {
+        GameData.health--;
+        Dead();
+      }
     } else if (other.gameObject.CompareTag("Portal")) {
       if(GameData.levelComplete()) {
         GameData.nextLevel();

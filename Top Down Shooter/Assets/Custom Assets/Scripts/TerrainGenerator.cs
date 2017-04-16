@@ -251,6 +251,16 @@ public class TerrainGenerator : MonoBehaviour {
     float playerY = terrains[GetTerrainWithCoord(maxX / 2, maxZ / 2)]
                         .terrList.GetComponent<Terrain>()
                         .SampleHeight(new Vector3(playerX, 0, playerZ));
+    int tries = 0;
+    while (playerY <= 200 && tries < 100) {
+      playerX = UnityEngine.Random.Range(0, terrains[0].terrData.size.x);
+      playerZ = UnityEngine.Random.Range(0, terrains[0].terrData.size.z);
+
+      playerY = terrains[GetTerrainWithCoord(maxX / 2, maxZ / 2)]
+                    .terrList.GetComponent<Terrain>()
+                    .SampleHeight(new Vector3(playerX, 0, playerZ));
+      tries++;
+    }
 
     players = GameObject.FindObjectsOfType<InitPlayer>();
     if (players.Length == 0) {
@@ -328,6 +338,18 @@ public class TerrainGenerator : MonoBehaviour {
     float playerY = terrains[GetTerrainWithCoord(maxX / 2, maxZ / 2)]
                         .terrList.GetComponent<Terrain>()
                         .SampleHeight(new Vector3(playerX, 0, playerZ));
+
+    int tries = 0;
+    while (playerY <= 200 && tries < 100) {
+      playerX = UnityEngine.Random.Range(0, terrains[0].terrData.size.x);
+      playerZ = UnityEngine.Random.Range(0, terrains[0].terrData.size.z);
+
+      playerY = terrains[GetTerrainWithCoord(maxX / 2, maxZ / 2)]
+                    .terrList.GetComponent<Terrain>()
+                    .SampleHeight(new Vector3(playerX, 0, playerZ));
+      tries++;
+    }
+
     if (player == null) {
       if (players.Length == 1) {
         player = players[0].gameObject;

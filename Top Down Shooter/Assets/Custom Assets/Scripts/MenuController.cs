@@ -31,37 +31,22 @@ class MenuController : MonoBehaviour {
  private
   float initialMoveSpeed;
  private
-  Vector3 initalSudoPosition;
+  Vector3 initialSudoPosition;
  private
-  Quaternion initalSudoRotation;
+  Quaternion initialSudoRotation;
+ private
+  bool overrideToggle = false;
 
  public
   void Awake() {
-    initialMoveSpeed = SudoPlayer_.moveSpeed;
-    initalSudoPosition = Camera1.transform.localPosition;
-    initalSudoRotation = Camera1.transform.localRotation;
+    if (SudoPlayer_ != null) {
+      initialMoveSpeed = SudoPlayer_.moveSpeed;
+      initialSudoPosition = Camera1.transform.localPosition;
+      initialSudoRotation = Camera1.transform.localRotation;
+    }
     foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
       OSD.enabled = false;
     }
-
-    try {
-      GameObject.Find("Toggle Vignette").GetComponent<Toggle>().isOn =
-          GameData.vignette;
-      GameObject.Find("Toggle DOF").GetComponent<Toggle>().isOn = GameData.dof;
-      GameObject.Find("Toggle Motion Blur").GetComponent<Toggle>().isOn =
-          GameData.motionBlur;
-      GameObject.Find("Toggle Bloom and Flare").GetComponent<Toggle>().isOn =
-          GameData.bloomAndFlares;
-      GameObject.Find("Toggle Fullscreen").GetComponent<Toggle>().isOn =
-          GameData.fullscreen;
-      GameObject.Find("Toggle Sound Effects").GetComponent<Toggle>().isOn =
-          GameData.soundEffects;
-      GameObject.Find("Toggle Music").GetComponent<Toggle>().isOn =
-          GameData.music;
-      GameObject.Find("Toggle Camera Damping").GetComponent<Toggle>().isOn =
-          GameData.cameraDamping;
-    } catch (NullReferenceException e) {}
-    GameData.fullscreen = Screen.fullScreen;
   }
  public
   void Start() { GameData.showCursor = true; }
@@ -75,6 +60,25 @@ class MenuController : MonoBehaviour {
   }
  public
   void OpenSettings() {
+    overrideToggle = true;
+    Toggle temp = GameObject.Find("Toggle Vignette").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.vignette;
+    temp = GameObject.Find("Toggle DOF").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.dof;
+    temp = GameObject.Find("Toggle Motion Blur").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.motionBlur;
+    temp = GameObject.Find("Toggle Bloom and Flare").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.bloomAndFlares;
+    temp = GameObject.Find("Toggle Fullscreen").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.fullscreen;
+    temp = GameObject.Find("Toggle Sound Effects").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.soundEffects;
+    temp = GameObject.Find("Toggle Music").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.music;
+    temp = GameObject.Find("Toggle Camera Damping").GetComponent<Toggle>();
+    if (temp != null) temp.isOn = GameData.cameraDamping;
+    overrideToggle = false;
+
     GameData.showCursor = true;
     Camera1.SetActive(false);
     Camera2.SetActive(false);
@@ -83,6 +87,7 @@ class MenuController : MonoBehaviour {
  public
   void CloseSettings() {
     GameData.showCursor = true;
+    GameData.SaveSettings();
     Camera1.SetActive(true);
     Camera2.SetActive(false);
     SettingsCamera.SetActive(false);
@@ -136,16 +141,16 @@ class MenuController : MonoBehaviour {
         terrain.player = SudoPlayer_.transform.gameObject;
         inTransition = false;
       }
-    } else {
+    } else if (SudoPlayer_ != null) {
       bool escape = Input.GetAxis("Cancel") > 0.5f;
       if (escape && inTutorial) {
         ExitTutorial();
       } else if (!inTutorial) {
         Camera1.transform.localPosition =
-            Vector3.Lerp(Camera1.transform.localPosition, initalSudoPosition,
+            Vector3.Lerp(Camera1.transform.localPosition, initialSudoPosition,
                          0.15f * Time.deltaTime);
         Camera1.transform.localRotation =
-            Quaternion.Lerp(Camera1.transform.localRotation, initalSudoRotation,
+            Quaternion.Lerp(Camera1.transform.localRotation, initialSudoRotation,
                             0.15f * Time.deltaTime);
         SudoPlayer_.moveSpeed = Mathf.Lerp(
             SudoPlayer_.moveSpeed, initialMoveSpeed, 0.3f * Time.deltaTime);
@@ -154,28 +159,44 @@ class MenuController : MonoBehaviour {
   }
 
  public
-  void ToggleVignette() { GameData.vignette = !GameData.vignette; }
+  void ToggleVignette() {
+    if (overrideToggle) return;
+    GameData.vignette = !GameData.vignette;
+  }
  public
-  void ToggleDOF() { GameData.dof = !GameData.dof; }
+  void ToggleDOF() {
+    if (overrideToggle) return;
+    GameData.dof = !GameData.dof;
+  }
  public
-  void ToggleMotionBlur() { GameData.motionBlur = !GameData.motionBlur; }
+  void ToggleMotionBlur() {
+    if (overrideToggle) return;
+    GameData.motionBlur = !GameData.motionBlur;
+  }
  public
   void ToggleBloomAndFlare() {
+    if (overrideToggle) return;
     GameData.bloomAndFlares = !GameData.bloomAndFlares;
   }
  public
   void ToggleFullscreen() {
+    if (overrideToggle) return;
     GameData.fullscreen = !GameData.fullscreen;
     Screen.fullScreen = GameData.fullscreen;
   }
  public
-  void ToggleSoundEffects() { GameData.soundEffects = !GameData.soundEffects; }
+  void ToggleSoundEffects() {
+    if (overrideToggle) return;
+    GameData.soundEffects = !GameData.soundEffects;
+  }
  public
   void ToggleMusic() {
+    if (overrideToggle) return;
     GameData.music = !GameData.music;
   }
  public
   void ToggleCameraDamping() {
+    if (overrideToggle) return;
     GameData.cameraDamping = !GameData.cameraDamping;
   }
 }

@@ -11,14 +11,20 @@ class PlayerShooter : MonoBehaviour {
     AudioClip Sound2;
    public
     AudioClip Sound3;
+   public
+    AudioClip BombDrop;
   }
 
  public
   Projectile projectilePlaceholder;
  public
+  Projectile bombPlaceholder;
+ public
   float projectile_speed;
  private
   float lastShotTime = 0;
+ private
+  float lastBombTime = 0;
  public
   GUIText weaponDisplay;
  private
@@ -40,6 +46,7 @@ class PlayerShooter : MonoBehaviour {
       projectilePlaceholder.placeholder = true;
       player = GameObject.FindGameObjectsWithTag("Player")[0];
       lastShotTime = Time.time;
+      lastBombTime = Time.time;
       line = GetComponent<LineRenderer>();
       if (line == null) {
         Debug.LogWarning("PlayerShooter could not find LineRenderer");
@@ -60,6 +67,7 @@ class PlayerShooter : MonoBehaviour {
     if (player.GetComponent<PlayerController>().isDead) return;
 
     float shoot = Input.GetAxis("Fire1");
+    float shoot2 = Input.GetAxis("Fire2");
     if(Input.GetKey("1")) weapon = 1;
     if(Input.GetKey("2")) weapon = 2;
     if(Input.GetKey("3")) weapon = 3;
@@ -82,8 +90,7 @@ class PlayerShooter : MonoBehaviour {
       }
     }
 
-    if (weapon == 1 && shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
-        GameData.collectedCollectibles > 0) {
+    if (weapon == 1 && shoot > 0.5f && Time.time - lastShotTime > 0.2f) {
       //GameData.collectedCollectibles--;
       lastShotTime = Time.time;
       PlaySound(sounds.Sound1);
@@ -93,11 +100,11 @@ class PlayerShooter : MonoBehaviour {
       projectile.placeholder = false;
       projectile.GetComponent<Rigidbody>().velocity =
           transform.rotation * (Vector3.forward * projectile_speed);
-      Physics.IgnoreCollision(player.GetComponent<CapsuleCollider>(),
-                              projectile.GetComponent<CapsuleCollider>());
+      Physics.IgnoreCollision(player.GetComponent<Collider>(),
+                              projectile.GetComponent<Collider>());
       projectile.transform.parent = null;
-    } else if (weapon == 2 && shoot > 0.5f && Time.time - lastShotTime > 0.225f &&
-               GameData.collectedCollectibles > 0) {
+    } else if (weapon == 2 && shoot > 0.5f &&
+               Time.time - lastShotTime > 0.225f) {
       //GameData.collectedCollectibles -= 2;
       PlaySound(sounds.Sound2);
       lastShotTime = Time.time;
@@ -124,8 +131,7 @@ class PlayerShooter : MonoBehaviour {
         line.SetPosition(1, projectilePlaceholder.transform.position +
                                 transform.rotation * (Vector3.forward * 10f));
       }
-    } else if (weapon == 3 && shoot > 0.5f && Time.time - lastShotTime > 0.2f &&
-               GameData.collectedCollectibles > 0) {
+    } else if (weapon == 3 && shoot > 0.5f && Time.time - lastShotTime > 0.2f) {
       //GameData.collectedCollectibles--;
       PlaySound(sounds.Sound3);
       lastShotTime = Time.time;
@@ -135,11 +141,30 @@ class PlayerShooter : MonoBehaviour {
       projectile.placeholder = false;
       projectile.GetComponent<Rigidbody>().velocity =
           transform.rotation * (Vector3.forward * projectile_speed);
-      Physics.IgnoreCollision(player.GetComponent<CapsuleCollider>(),
-                              projectile.GetComponent<CapsuleCollider>());
+      Physics.IgnoreCollision(player.GetComponent<Collider>(),
+                              projectile.GetComponent<Collider>());
       projectile.GetComponent<Rigidbody>().useGravity = true;
       projectile.transform.parent = null;
     }
+
+    // Drop bomb
+    if (bombPlaceholder != null && shoot2 > 0.5f &&
+        Time.time - lastBombTime > 1.0f && GameData.collectedCollectibles > 0) {
+      GameData.collectedCollectibles--;
+      PlaySound(sounds.BombDrop);
+      lastBombTime = Time.time;
+      Projectile projectile = Instantiate(
+          bombPlaceholder, bombPlaceholder.transform.position,
+          bombPlaceholder.transform.rotation, transform);
+      projectile.placeholder = false;
+      projectile.GetComponent<Rigidbody>().velocity =
+          transform.rotation * (Vector3.forward * projectile_speed / 2f);
+      Physics.IgnoreCollision(player.GetComponent<Collider>(),
+                              projectile.GetComponent<Collider>());
+      projectile.GetComponent<Rigidbody>().useGravity = true;
+      projectile.transform.parent = null;
+    }
+
     if (line != null && Time.time - lastShotTime > 0.1f) {
       line.enabled = false;
     }

@@ -2,6 +2,12 @@ using UnityEngine;
 
 public
 class EnemyController : MonoBehaviour {
+  [System.Serializable] public class Sounds {
+   public
+    AudioPlayer Player;
+   public
+    AudioClip ShootSound;
+  }
  public
   Projectile projectilePlaceholder;
  public
@@ -16,6 +22,8 @@ class EnemyController : MonoBehaviour {
   int health = 5;
  public
   bool spawnChildren = true;
+ public
+  Sounds sounds;
 
  private
   GameObject player;
@@ -36,6 +44,8 @@ class EnemyController : MonoBehaviour {
   float lastSpawnTime;
  private
   float lastShotTime;
+ private
+  float lastMoveTime;
  public
   void Awake() { GameData.numEnemies++; }
  public
@@ -49,6 +59,7 @@ class EnemyController : MonoBehaviour {
     lastRotation = transform.rotation;
     lastSpawnTime = Time.time;
     lastShotTime = Time.time;
+    lastMoveTime = Time.time;
     line = GetComponent<LineRenderer>();
     line.startColor = Color.white;
     line.endColor = Color.red;
@@ -57,27 +68,13 @@ class EnemyController : MonoBehaviour {
   }
  public
   void kill() {
-    if(GameData.numEnemies-1 <= 0) {
-      GameData.nextLevel();
-    }
+    // if(GameData.numEnemies-1 <= 0) {
+    //   GameData.nextLevel();
+    // }
     Destroy(gameObject);
   }
  public
   void Update() {
-    // The enemy moves in a triangle pattern in respect to time and it's
-    // starting position.
-    transform.position = Vector3.Lerp(startPos, startPos + Vector3.forward * 3,
-                                      Mathf.Abs(Time.time % 3 - 1));
-    transform.position =
-        Vector3.Lerp(transform.position, transform.position + Vector3.left * 3,
-                     Mathf.Abs(Time.time % 3 - 2));
-
-    // Keep the enemy a constant distance off the ground.
-    if(ground!=null) {
-      transform.position = new Vector3(transform.position.x,
-                                       ground.GetTerrainHeight(gameObject) + 1f,
-                                       transform.position.z);
-    }
 
     // Change the enemy's color to show remaining health.
     if (health == 0) {
@@ -91,24 +88,44 @@ class EnemyController : MonoBehaviour {
       GetComponent<MeshRenderer>().material.color = Color.white;
     }
 
-    // Move the point at which the enemy is aiming towards the player with
+    // Move the point at which the enemy is aiming, towards the player with
     // damping.
-    Vector3 target = Vector3.Lerp(player.transform.position + Vector3.up * 1.2f,
-                                  lastTargetPosition, 55.0f * Time.deltaTime);
-    projectilePlaceholder.transform.LookAt(target);
+    Vector3 target = Vector3.Lerp(lastTargetPosition,
+                                  player.transform.position + Vector3.up * 1.2f,
+                                  53.0f * Time.deltaTime);
+
     // If the player is close enough, slowly move the enemy towards the player.
     if ((player.transform.position - projectilePlaceholder.transform.position)
             .magnitude <= 20f) {
       lastTargetPosition = target;
+      startPos = transform.position;
+      lastMoveTime = Time.time;
       startPos = Vector3.MoveTowards(
           startPos, player.transform.position + Vector3.up * 1.2f,
-          1.0f * Time.deltaTime);
+          2.0f * Time.deltaTime);
+      transform.position = startPos;
     } else {
       lastTargetPosition =
-          Quaternion.Euler(0, 1f, 0) *
+          Quaternion.Euler(0, 2.0f, 0) *
           (lastTargetPosition + transform.position - lastPosition);
+      // The enemy moves in a pattern in respect to time and it's starting
+      // position.
+      transform.position =
+          Vector3.Lerp(startPos, startPos + Vector3.forward * 3,
+                       Mathf.Abs((1 + Time.time - lastMoveTime) % 3 - 1));
+      transform.position = Vector3.Lerp(
+          transform.position, transform.position + Vector3.left * 3,
+          Mathf.Abs((2 + Time.time - lastMoveTime) % 4 - 2));
+    }
+    // Keep the enemy a constant distance off the ground.
+    if (ground != null) {
+      transform.position = new Vector3(transform.position.x,
+                                       ground.GetTerrainHeight(gameObject) + 1f,
+                                       transform.position.z);
     }
     lastPosition = transform.position;
+
+    projectilePlaceholder.transform.LookAt(lastTargetPosition);
 
     // Raycasting means the enemy is checking to make sure the player is close,
     // and there are no obstacles between the player and the enemy, before
@@ -159,6 +176,7 @@ class EnemyController : MonoBehaviour {
       Physics.IgnoreCollision(GetComponent<Collider>(),
                               projectile.GetComponent<Collider>());
       projectile.transform.parent = null;
+      PlaySound(sounds.ShootSound);
     }
 
     // Spawn a copy at a random location around the player.
@@ -178,14 +196,28 @@ class EnemyController : MonoBehaviour {
     }
   }
 
+  void PlaySound(AudioClip clip) {
+    if (sounds.Player != null && clip != null && GameData.soundEffects) {
+      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      player.clip = clip;
+    }
+  }
+
  public
   void OnDestroy() {
     GameData.numEnemies--;
   }
 
  public
+  void OnTriggerEnter(Collider other) {
+    if (other.gameObject.CompareTag("Explosion")) {
+      kill();
+    }
+  }
+ public
   void OnCollisionEnter(Collision other) {
     if (other.gameObject.GetComponent<Projectile>() != null) {
+      Destroy(other.gameObject);
       health--;
       if(health<0) {
         kill();
