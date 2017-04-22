@@ -555,7 +555,8 @@ public
       PlaySound(sounds.CollectibleSound);
     } else if (other.gameObject.CompareTag("Enemy")) {
       if (GameData.getLevel() == 3) {
-        GameData.nextLevel();
+        GameData.health=0;
+        Dead();
       } else {
         GameData.health--;
         Dead();
@@ -563,7 +564,8 @@ public
     } else if (other.gameObject.CompareTag("EnemyProjectile")) {
       Destroy(other.gameObject);
       if (GameData.getLevel() == 3) {
-        GameData.nextLevel();
+        GameData.health=0;
+        Dead();
       } else {
         GameData.health--;
         Dead();

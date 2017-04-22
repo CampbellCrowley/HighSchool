@@ -10,15 +10,17 @@ class GameData : MonoBehaviour {
  public
   AudioSource MusicPlayer;
  public
+  AudioClip QueuedMusic;
+ public
   void Awake() {
     if (Instance == null) {
       MusicPlayer = GetComponent<AudioSource>();
+      QueuedMusic = MusicPlayer.clip;
       DontDestroyOnLoad(gameObject);
       Instance = this;
     } else if (Instance != this) {
       Destroy(gameObject);
-      Instance.MusicPlayer.clip = GetComponent<AudioSource>().clip;
-      Instance.MusicPlayer.Play();
+      Instance.QueuedMusic = GetComponent<AudioSource>().clip;
     }
   }
  public
@@ -161,6 +163,13 @@ class GameData : MonoBehaviour {
     }
     if (MusicPlayer != null) {
       float goalVol = music ? 0.5f : 0.0f;
+      if(QueuedMusic != null && QueuedMusic != MusicPlayer.clip) {
+        goalVol = 0.0f;
+        if(MusicPlayer.volume <= 0.001f) {
+          MusicPlayer.clip = QueuedMusic;
+          MusicPlayer.Play();
+        }
+      }
       MusicPlayer.volume = Mathf.Lerp(MusicPlayer.volume, goalVol, 0.1f);
     }
   }
