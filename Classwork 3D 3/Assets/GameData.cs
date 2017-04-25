@@ -20,7 +20,7 @@ class GameData : MonoBehaviour {
     MusicPlayer = GetComponent<AudioSource>();
   }
  public
-  static int collectedCollectibles = 0;
+  static int collectedCollectibles = 1000;
  public
   static int health = 10;
  public
@@ -65,6 +65,7 @@ class GameData : MonoBehaviour {
  public
   void Update() {
     Cursor.visible = showCursor;
+    Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
     if (Input.GetAxis("Skip") > 0.5f) {
       nextLevel();
     }

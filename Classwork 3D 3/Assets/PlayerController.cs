@@ -44,6 +44,8 @@ class PlayerController : MonoBehaviour {
   bool rotateWithCamera = false;
  public
   float MaxCameraDistance = 3f;
+ public
+  float cameraHeight = 1.5f;
  [Header("OSDs/HUD")]
  public
   GUIText collectedCounter;
@@ -330,8 +332,10 @@ class PlayerController : MonoBehaviour {
         }
       }
     }
+    float cameraHeight_ = cameraHeight;
+    if(isCrouched && isGrounded) cameraHeight_ *= 2/3f;
     Vector3 newCameraPos =
-        transform.position + Vector3.up * 1.2f +
+        transform.position + Vector3.up * cameraHeight_ +
         Vector3.ClampMagnitude(
             (Vector3.left *
                  (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -

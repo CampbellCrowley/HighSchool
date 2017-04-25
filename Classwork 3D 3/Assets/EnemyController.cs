@@ -40,15 +40,18 @@ class EnemyController : MonoBehaviour {
     health = StartHealth;
     player = GameObject.Find("Ethan");
     startPos = transform.position;
+    if(projectilePlaceholder != null)
     lastTargetPosition = projectilePlaceholder.transform.position;
     lastPosition = transform.position;
     lastSpawnTime = Time.time;
     lastShotTime = Time.time;
     line = GetComponent<LineRenderer>();
-    line.startColor = Color.white;
-    line.endColor = Color.red;
-    line.startWidth = 0.1f;
-    line.endWidth = 0.01f;
+    if(line != null) {
+      line.startColor = Color.white;
+      line.endColor = Color.red;
+      line.startWidth = 0.1f;
+      line.endWidth = 0.01f;
+    }
   }
  public
   void kill() { Destroy(gameObject); }
@@ -70,54 +73,56 @@ class EnemyController : MonoBehaviour {
       GetComponent<MeshRenderer>().material.color = Color.white;
     }
 
-    Vector3 target = Vector3.Lerp(player.transform.position + Vector3.up * 1.2f,
-                                  lastTargetPosition, 55.0f * Time.deltaTime);
-    projectilePlaceholder.transform.LookAt(target);
-    if ((player.transform.position - projectilePlaceholder.transform.position)
-            .magnitude <= 10f) {
-      lastTargetPosition = target;
-    } else {
-      lastTargetPosition = Quaternion.Euler(0,1f,0) * (lastTargetPosition + transform.position-lastPosition);
-    }
-    lastPosition = transform.position;
+    if(projectilePlaceholder != null) {
+      Vector3 target = Vector3.Lerp(player.transform.position + Vector3.up * 1.2f,
+                                    lastTargetPosition, 55.0f * Time.deltaTime);
+      projectilePlaceholder.transform.LookAt(target);
+      if ((player.transform.position - projectilePlaceholder.transform.position)
+              .magnitude <= 10f) {
+        lastTargetPosition = target;
+      } else {
+        lastTargetPosition = Quaternion.Euler(0,1f,0) * (lastTargetPosition + transform.position-lastPosition);
+      }
+      lastPosition = transform.position;
 
-    if (isRaycasting) {
-      RaycastHit raycast;
-      Physics.Raycast(projectilePlaceholder.transform.position,
-                      projectilePlaceholder.transform.forward, out raycast, 10f,
-                      ~(1 << 2));
+      if (isRaycasting) {
+        RaycastHit raycast;
+        Physics.Raycast(projectilePlaceholder.transform.position,
+                        projectilePlaceholder.transform.forward, out raycast, 10f,
+                        ~(1 << 2));
 
-      shoot = false;
-      // line.enabled = false;
-      line.SetPosition(0, projectilePlaceholder.transform.position);
-      line.SetPosition(1, projectilePlaceholder.transform.position +
-                              projectilePlaceholder.transform.forward * 10f);
-      if (line != null && raycast.transform != null) {
-        if (raycast.transform.gameObject == player ||
-            player.GetComponent<PlayerController>().isDead) {
-          // line.enabled = true;
-          shoot = true;
-          lastShotTime -= (10 - raycast.distance) / 20f;
+        shoot = false;
+        // line.enabled = false;
+        line.SetPosition(0, projectilePlaceholder.transform.position);
+        line.SetPosition(1, projectilePlaceholder.transform.position +
+                                projectilePlaceholder.transform.forward * 10f);
+        if (line != null && raycast.transform != null) {
+          if (raycast.transform.gameObject == player ||
+              player.GetComponent<PlayerController>().isDead) {
+            // line.enabled = true;
+            shoot = true;
+            lastShotTime -= (10 - raycast.distance) / 20f;
+          }
         }
       }
-    }
-    projectileGun.transform.rotation = projectilePlaceholder.transform.rotation * Quaternion.Euler(90f,0,0);
-    if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
-      lastShotTime = Time.time;
-      Projectile projectile = Instantiate(
-          projectilePlaceholder, projectilePlaceholder.transform.position,
-          projectilePlaceholder.transform.rotation, transform);
+      projectileGun.transform.rotation = projectilePlaceholder.transform.rotation * Quaternion.Euler(90f,0,0);
+      if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
+        lastShotTime = Time.time;
+        Projectile projectile = Instantiate(
+            projectilePlaceholder, projectilePlaceholder.transform.position,
+            projectilePlaceholder.transform.rotation, transform);
 
-      projectile.placeholder = false;
+        projectile.placeholder = false;
 
-      projectile.GetComponent<Rigidbody>().velocity =
-          projectile.transform.forward * projectile_speed;
+        projectile.GetComponent<Rigidbody>().velocity =
+            projectile.transform.forward * projectile_speed;
 
-      projectile.transform.Rotate(new Vector3(90f, 0, 0));
+        projectile.transform.Rotate(new Vector3(90f, 0, 0));
 
-      Physics.IgnoreCollision(GetComponent<BoxCollider>(),
-                              projectile.GetComponent<CapsuleCollider>());
-      projectile.transform.parent = null;
+        Physics.IgnoreCollision(GetComponent<BoxCollider>(),
+                                projectile.GetComponent<CapsuleCollider>());
+        projectile.transform.parent = null;
+      }
     }
     if(Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10) {
       lastSpawnTime = Time.time;
