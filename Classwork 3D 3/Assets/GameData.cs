@@ -78,5 +78,5 @@ class GameData : MonoBehaviour {
   public static bool fullscreen = true;
   public static bool soundEffects = true;
   public static bool music = true;
-  public static bool cameraDamping = true;
+  public static bool cameraDamping = false;
 }

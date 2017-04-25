@@ -331,7 +331,7 @@ class PlayerController : MonoBehaviour {
       }
     }
     Vector3 newCameraPos =
-        transform.position + Vector3.up * 2f +
+        transform.position + Vector3.up * 1.2f +
         Vector3.ClampMagnitude(
             (Vector3.left *
                  (Mathf.Sin(Camera.transform.eulerAngles.y / 180f * Mathf.PI) -
