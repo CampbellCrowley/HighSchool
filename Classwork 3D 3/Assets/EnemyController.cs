@@ -69,8 +69,13 @@ class EnemyController : MonoBehaviour {
           (Color.red + Color.yellow) / 2;
     } else if (health == 2) {
       GetComponent<MeshRenderer>().material.color = Color.yellow;
-    } else {
+    } else if (health == 3) {
+      GetComponent<MeshRenderer>().material.color =
+          (Color.yellow + Color.white) / 2f;
+    } else if (health == 4) {
       GetComponent<MeshRenderer>().material.color = Color.white;
+    } else {
+      GetComponent<MeshRenderer>().material.color = Color.green;
     }
 
     if(projectilePlaceholder != null) {
@@ -105,7 +110,9 @@ class EnemyController : MonoBehaviour {
           }
         }
       }
-      projectileGun.transform.rotation = projectilePlaceholder.transform.rotation * Quaternion.Euler(90f,0,0);
+      projectileGun.transform.rotation =
+          projectilePlaceholder.transform.rotation *
+          Quaternion.Euler(90f, 0, 0);
       if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
         lastShotTime = Time.time;
         Projectile projectile = Instantiate(
@@ -117,14 +124,15 @@ class EnemyController : MonoBehaviour {
         projectile.GetComponent<Rigidbody>().velocity =
             projectile.transform.forward * projectile_speed;
 
-        projectile.transform.Rotate(new Vector3(90f, 0, 0));
+        projectile.transform.Rotate(new Vector3(90f, 90f, 90f));
 
         Physics.IgnoreCollision(GetComponent<BoxCollider>(),
                                 projectile.GetComponent<CapsuleCollider>());
         projectile.transform.parent = null;
       }
     }
-    if(Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10) {
+    if (Time.time - lastSpawnTime > 2.1f && GameData.numEnemies < 10 &&
+        spawnChildren) {
       lastSpawnTime = Time.time;
       Instantiate(gameObject);
     }

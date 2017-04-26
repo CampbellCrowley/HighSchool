@@ -22,7 +22,7 @@ class GameData : MonoBehaviour {
  public
   static int collectedCollectibles = 1000;
  public
-  static int health = 10;
+  static int health = 1;
  public
   static bool showCursor = false;
  public
@@ -49,6 +49,7 @@ class GameData : MonoBehaviour {
   static void restartLevel() {
     Debug.Log("Restarting Level!");
     collectedCollectibles = 0;
+    health = 1;
     SceneManager.LoadScene(getLevel());
   }
  public

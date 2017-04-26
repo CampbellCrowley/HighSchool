@@ -145,11 +145,8 @@ class PlayerController : MonoBehaviour {
   }
 
   void Update() {
-    if (isDead && Time.realtimeSinceStartup - deathTime >= 5f) {
-      if (GameData.health > 0)
-        GameData.restartLevel();
-      else
-        GameData.MainMenu();
+    if (isDead && Time.realtimeSinceStartup - deathTime >= 0f /*5f*/) {
+      GameData.restartLevel();
     }
   }
 
