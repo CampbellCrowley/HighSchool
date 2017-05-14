@@ -7,11 +7,49 @@ using UnityEngine.UI;
 
 public
 class MenuController : MonoBehaviour {
+ public
+  TerrainGenerator terrain;
+ public
+  GameObject SettingsCamera;
+
+  [Header("Sudo Player")]
+ public
+  InitPlayer SudoPlayer_;
+ public
+  GameObject Camera1;
+
+  [Header("Real Player")]
+ public
+  InitPlayer RealPlayer_;
+ public
+  GameObject Camera2;
+
+ private
+  bool inTutorial = false;
+ private
+  bool inTransition = false;
+ private
+  bool inSettings = false;
+ private
+  float initialMoveSpeed;
+ private
+  Vector3 initialSudoPosition;
+ private
+  Quaternion initialSudoRotation;
  private
   bool overrideToggle = false;
 
  public
-  void Start() { GameData.showCursor = true; }
+  void Awake() {
+    if (SudoPlayer_ != null) {
+      initialMoveSpeed = SudoPlayer_.moveSpeed;
+      initialSudoPosition = Camera1.transform.localPosition;
+      initialSudoRotation = Camera1.transform.localRotation;
+    }
+    foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
+      OSD.enabled = false;
+    }
+  }
 
  public
   void MainMenu() { GameData.MainMenu(); }
@@ -42,20 +80,98 @@ class MenuController : MonoBehaviour {
     overrideToggle = false;
 
     GameData.showCursor = true;
-    // Camera1.SetActive(false);
-    // Camera2.SetActive(false);
-    // SettingsCamera.SetActive(true);
+    Camera1.SetActive(false);
+    Camera2.SetActive(false);
+    SettingsCamera.SetActive(true);
+    inSettings = true;
   }
  public
   void CloseSettings() {
     GameData.showCursor = true;
     GameData.SaveSettings();
-    // Camera1.SetActive(true);
-    // Camera2.SetActive(false);
-    // SettingsCamera.SetActive(false);
+    Camera1.SetActive(true);
+    Camera2.SetActive(false);
+    SettingsCamera.SetActive(false);
+    inSettings = false;
+  }
+ public
+  void PlayTutorial() {
+    inTutorial = true;
+    inTransition = true;
+    GameData.showCursor = false;
+  }
+ public
+  void ExitTutorial() {
+    inTutorial = false;
+    inTransition = true;
+    GameData.showCursor = true;
   }
  public
   void quitGame() { GameData.quit(); }
+
+ public
+  void Update() {
+    if (inTransition) {
+      Button[] buttons =
+          GameObject.FindObjectsOfType(typeof(Button)) as Button[];
+      for (int i = 0; i < buttons.Length; i++) {
+        buttons[i].interactable = !buttons[i].interactable;
+      }
+      if (inTutorial) {
+        foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
+          OSD.enabled = true;
+        }
+        Camera2.transform.position = Camera1.transform.position;
+        Camera2.transform.rotation = Camera1.transform.rotation;
+        Camera1.SetActive(false);
+        Camera2.SetActive(true);
+        SudoPlayer_.moveSpeed = 0f;
+        RealPlayer_.transform.position =
+            SudoPlayer_.transform.position;
+        RealPlayer_.transform.rotation = SudoPlayer_.transform.rotation;
+        terrain.player = RealPlayer_.transform.gameObject;
+        terrain.movePlayerToTop();
+        inTransition = false;
+      } else {
+        foreach (GUIText OSD in FindObjectsOfType<GUIText>()) {
+          OSD.enabled = false;
+        }
+        Camera1.transform.position = Camera2.transform.position;
+        Camera1.transform.rotation = Camera2.transform.rotation;
+        Camera1.SetActive(true);
+        Camera2.SetActive(false);
+        terrain.player = SudoPlayer_.transform.gameObject;
+        inTransition = false;
+      }
+    } else if (SudoPlayer_ != null) {
+      bool escape = Input.GetAxis("Cancel") > 0.5f;
+      if (escape && inTutorial) {
+        ExitTutorial();
+      } else if (!inTutorial) {
+        GameData.showCursor = true;
+        Camera1.transform.localPosition =
+            Vector3.Lerp(Camera1.transform.localPosition, initialSudoPosition,
+                         0.15f * Time.deltaTime);
+        Camera1.transform.localRotation =
+            Quaternion.Lerp(Camera1.transform.localRotation, initialSudoRotation,
+                            0.15f * Time.deltaTime);
+        SudoPlayer_.moveSpeed = Mathf.Lerp(
+            SudoPlayer_.moveSpeed, initialMoveSpeed, 0.3f * Time.deltaTime);
+      }
+    }
+    GameObject NM = GameObject.Find("Network Manager");
+    if (NM != null) {
+      UnityEngine.Networking.MyNetworkManagerHUD HUD =
+          NM.GetComponent<UnityEngine.Networking.MyNetworkManagerHUD>();
+      if (HUD != null) {
+        HUD.showGUI = !inTutorial && !inSettings;
+      } else {
+        Debug.Log("HUD NULL");
+      }
+    } else {
+      Debug.Log("NM NULL");
+    }
+  }
 
  public
   void ToggleVignette() {

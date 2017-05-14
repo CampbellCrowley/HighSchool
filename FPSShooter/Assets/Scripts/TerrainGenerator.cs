@@ -162,7 +162,7 @@ public class TerrainGenerator : MonoBehaviour {
   [Tooltip("Maximum number of trees per chunk to be generated.")]
   [SerializeField] public int maxNumTrees = 500;
   // Player for deciding when to load chunks based on position.
-  GameObject player;
+  public GameObject player;
   InitPlayer[] players;
   int numIdentifiedPlayers = 0;
   [Tooltip("Whether or not to use the pre-determined seed or use Unity's random seed.")]

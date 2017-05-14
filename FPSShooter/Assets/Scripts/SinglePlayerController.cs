@@ -2,12 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityStandardAssets.ImageEffects;
-using UnityEngine.Networking;
 #pragma warning disable 0168
 
-[NetworkSettings(sendInterval=0.01f)]
 public
-class PlayerController : NetworkBehaviour {
+class SinglePlayerController : MonoBehaviour {
   [System.Serializable] public class Sounds {
    public
     AudioPlayer Player;
@@ -79,8 +77,6 @@ class PlayerController : NetworkBehaviour {
   Sounds sounds;
   [Header("Misc.")]
  public
-  float sendFreqency = 0.1f;
- public
   float GameTime = 10f;
  public
   GameObject RagdollTemplate;
@@ -144,8 +140,6 @@ class PlayerController : NetworkBehaviour {
  private
   float lastFootstepTime = 0.0f;
  private
-  float lastSendTime = 0.0f;
- private
   float lastVignetteAmount = 0.0f;
  private
   float lastSprintInput = 0.0f;
@@ -156,23 +150,15 @@ class PlayerController : NetworkBehaviour {
  private
   Vector3 lastFloorTransformPosition;
 
-  [SyncVar] public string username = "Username";
-  [SyncVar] private Vector3 rbodyPosition, rbodyVelocity, transformPosition;
-  [SyncVar] private Quaternion rbodyRotation, transformRotation;
-  [Command] public void CmdChangeName(string name) { username = name; }
-  [Command] public void CmdUpdatePlayer(Vector3 rposition, Vector3 rvelocity,
-                                        Quaternion rrotation, Vector3 tposition,
-                                        Quaternion trotation) {
-    rbodyPosition = rposition;
-    rbodyVelocity = rvelocity;
-    rbodyRotation = rrotation;
-    transformPosition = tposition;
-    transformRotation = trotation;
-  }
-
+ public
+  string username = "Username";
+ private
+  Vector3 rbodyPosition, rbodyVelocity, transformPosition;
+ private
+  Quaternion rbodyRotation, transformRotation;
 
  public
-  override void OnStartLocalPlayer() {
+  void Start() {
     spawned = false;
     if (sounds.LandSound != null) sounds.LandSound.LoadAudioData();
     if (sounds.JumpSound != null) sounds.JumpSound.LoadAudioData();
@@ -187,11 +173,11 @@ class PlayerController : NetworkBehaviour {
 
     startColor = RenderSettings.fogColor;
 
-    Camera = Instantiate(Camera);
+    //Camera = Instantiate(Camera);
     Camera.transform.parent = null;
     Camera.GetComponent<Camera>().enabled = true;
     Camera.GetComponent<AudioListener>().enabled = true;
-    Camera.name = "CameraFor" + netId;
+    Camera.name = "CameraForPlayer";
     foreach (Camera cam in UnityEngine.Camera.allCameras) {
       cam.layerCullSpherical = true;
     }
@@ -200,21 +186,12 @@ class PlayerController : NetworkBehaviour {
 
     GetComponent<MeshRenderer>().material.color = Color.blue;
 
-    if (GameData.username.ToLower() == "username" || GameData.username == "") {
-      GameData.username = NameList.GetName();
-    }
-    Debug.Log("Send Freqency: " + sendFreqency);
-    CmdChangeName(GameData.username);
-    CmdUpdatePlayer(rbody.position, rbody.velocity, rbody.rotation,
-                           transform.position, transform.rotation);
-
     levelStartTime = Time.time;
     lastGroundedTime = Time.time;
     lastSprintTime = Time.time;
     lastJumpSoundTimejump = Time.time;
     lastJumpTime = jumpFrequency;
     lastFootstepTime = Time.time;
-    lastSendTime = Time.realtimeSinceStartup;
 
   }
 
@@ -226,25 +203,10 @@ class PlayerController : NetworkBehaviour {
     if (username != "Username") {
       nameplate.text = username;
     } else {
-      nameplate.text = "Player " + (int.Parse(netId.ToString()) - 1);
+      nameplate.text = "Player";
     }
-    if (!isLocalPlayer) {
-      nameplate.GetComponent<MeshRenderer>().enabled = true;
-      if (rbodyRotation.x * rbodyRotation.x +
-              rbodyRotation.y * rbodyRotation.y +
-              rbodyRotation.z * rbodyRotation.z +
-              rbodyRotation.w * rbodyRotation.w !=
-          0) {
-        rbody.position = rbodyPosition;
-        rbody.velocity = rbodyVelocity;
-        rbody.rotation = rbodyRotation;
-        transform.position = transformPosition;
-        transform.rotation = transformRotation;
-        forward = rbody.velocity.magnitude / moveSpeed;
-      }
-      return;
-    } else if (intendedCameraDistance == 0 &&
-               Time.time - levelStartTime > flyDownTime + flyDownEndTime) {
+    if (intendedCameraDistance == 0 &&
+        Time.time - levelStartTime > flyDownTime + flyDownEndTime) {
       nameplate.GetComponent<MeshRenderer>().enabled = false;
     }
 
@@ -337,7 +299,6 @@ class PlayerController : NetworkBehaviour {
       lookHorizontal = 0;
       lookVertical = 0;
       rbody.velocity = Vector3.zero;
-      isCrouched = false;
       jump = false;
     } else {
       if (Time.time - levelStartTime <
@@ -643,11 +604,6 @@ class PlayerController : NetworkBehaviour {
     }
 
     if (isGrounded) lastGroundedTime = Time.time;
-    if (Time.realtimeSinceStartup - lastSendTime > sendFreqency) {
-      lastSendTime = Time.realtimeSinceStartup;
-      CmdUpdatePlayer(rbody.position, rbody.velocity, rbody.rotation,
-                      transform.position, transform.rotation);
-    }
   }
 
   void Dead() {
@@ -691,7 +647,6 @@ class PlayerController : NetworkBehaviour {
   }
 
   void OnAnimatorIK() {
-    if (!isLocalPlayer) return;
     if (Mathf.Abs(rbody.velocity.x) > 0.02f ||
         Mathf.Abs(rbody.velocity.z) > 0.02f) {
       turn = (moveAngle - anim.bodyRotation.eulerAngles.y) / 180f;

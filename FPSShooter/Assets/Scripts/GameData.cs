@@ -8,16 +8,31 @@ class GameData : MonoBehaviour {
  public
   static GameData Instance;
  public
-  static AudioSource MusicPlayer;
+  AudioSource MusicPlayer;
+ public
+  AudioClip QueuedMusic;
+ public
+  GameObject PauseMenu;
+ private
+  GameObject PauseMenu_;
  public
   void Awake() {
     if (Instance == null) {
+      MusicPlayer = GetComponent<AudioSource>();
+      QueuedMusic = MusicPlayer.clip;
       DontDestroyOnLoad(gameObject);
       Instance = this;
     } else if (Instance != this) {
       Destroy(gameObject);
+      Instance.QueuedMusic = GetComponent<AudioSource>().clip;
     }
-    MusicPlayer = GetComponent<AudioSource>();
+  }
+ public
+  void Start() {
+    LoadSettings();
+    if (MusicPlayer != null && !music) {
+      MusicPlayer.volume = 0.0f;
+    }
   }
  public
   static int health = 5;
@@ -27,12 +42,14 @@ class GameData : MonoBehaviour {
   static bool showCursor = true;
  public
   static bool isPaused = false;
-
  public
   static string username = "Username";
-
  public
-  static bool levelComplete() { return false; }
+  static int numEnemies = 0;
+ public
+  static bool levelComplete() {
+    return numEnemies == 0;
+  }
  public
   static int getLevel() { return SceneManager.GetActiveScene().buildIndex; }
  public
@@ -58,6 +75,16 @@ class GameData : MonoBehaviour {
 
  public
   void Update() {
+    if(Input.GetButtonDown("Pause")) {
+      GameData.isPaused = !GameData.isPaused;
+      GameData.showCursor = isPaused;
+      if(GameData.isPaused) {
+        PauseMenu_ = Instantiate(PauseMenu);
+        PauseMenu_.GetComponent<Canvas>().worldCamera = Camera.main;
+      } else {
+        Destroy(PauseMenu_);
+      }
+    }
     Cursor.visible = showCursor;
     Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
     /*if (Input.GetAxis("Skip") > 0.5f) {
