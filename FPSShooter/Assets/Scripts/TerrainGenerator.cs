@@ -19,6 +19,7 @@
 // #define DEBUG_HUD_POS
 // #define DEBUG_HUD_TIMES
 // #define DEBUG_HUD_LOADED
+//#define NAVIGATION_MESH_BUILDER
 #pragma warning disable 0168
 #pragma warning disable 0219
 
@@ -319,6 +320,9 @@ public class TerrainGenerator : MonoBehaviour {
       }
     }
     GenMode.slowHeightmap = slowHeightmap;
+#if NAVIGATION_MESH_BUILDER
+    UnityEngine.AI.NavMeshBuilder.BuildNavMesh();
+#endif
 
     // Choose player spawn location based off of the center of all pre-loaded
     // chunks.
