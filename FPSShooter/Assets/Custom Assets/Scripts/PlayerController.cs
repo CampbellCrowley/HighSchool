@@ -63,9 +63,16 @@ class PlayerController : NetworkBehaviour {
  public
   GUIText levelDisplay;
  public
+  GUIText usernameOSD;
+ public
   float staminaCountBars = 20f;
  public
   GUIText debug;
+  [Header("MiniMap")]
+ public
+  Camera MiniMapCamera;
+ public
+  Vector3 miniMapRelativePosition;
   [Header("Look and Sound")]
  public
   float footstepSize = 0.5f;
@@ -196,6 +203,8 @@ class PlayerController : NetworkBehaviour {
     startCameraRotation = Camera.transform.rotation;
     intendedCameraDistance = MaxCameraDistance;
 
+    if (MiniMapCamera != null) MiniMapCamera = Instantiate(MiniMapCamera);
+
     GetComponent<MeshRenderer>().material.color = Color.blue;
 
     if (GameData.username.ToLower() == "username" || GameData.username == "") {
@@ -208,6 +217,7 @@ class PlayerController : NetworkBehaviour {
 
     lifeCounter = Instantiate(lifeCounter);
     levelDisplay = Instantiate(levelDisplay);
+    usernameOSD = Instantiate(usernameOSD);
 
     levelStartTime = Time.time;
     lastGroundedTime = Time.time;
@@ -315,7 +325,7 @@ class PlayerController : NetworkBehaviour {
 
     if (!TerrainGenerator.doneLoadingSpawn && !spawned) {
       levelStartTime = Time.time;
-      Camera.transform.rotation = Quaternion.Euler(70f, 15f, 0f);
+      Camera.transform.rotation = Quaternion.Euler(70f, 30f, 0f);
       cameraSpawnRotation = Camera.transform.rotation;
     } else {
       spawned = true;
@@ -331,7 +341,7 @@ class PlayerController : NetworkBehaviour {
         levelStartTime += Time.deltaTime;
       }
       if (cameraSpawnRotation.w == 0) {
-        Camera.transform.rotation = Quaternion.Euler(70f, 15f, 0f);
+        Camera.transform.rotation = Quaternion.Euler(70f, 30f, 0f);
         cameraSpawnRotation = Camera.transform.rotation;
       }
       if (!isDead) {
@@ -440,6 +450,7 @@ class PlayerController : NetworkBehaviour {
     if (levelDisplay != null) {
       levelDisplay.text = "Level: " + GameData.getLevel();
     }
+    if (usernameOSD != null) usernameOSD.text = nameplate.text;
 
     // Movement
     //transform.position = rbody.transform.position;
@@ -478,9 +489,13 @@ class PlayerController : NetworkBehaviour {
               (rbody.velocity.y - 9.81f * 3f * Time.deltaTime) * Vector3.up;
         }
       } else {
-        movement += ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
-                     (rbody.velocity.y - 9.81f * 4f * Time.deltaTime)) *
-                    Vector3.up;
+        rbody.velocity = new Vector3(
+            rbody.velocity.x,
+            ((jump ? (moveSpeed * jumpMultiplier) : 0.0f) +
+             ((isGrounded || jump) ? 0.0f : (rbody.velocity.y -
+                                             9.81f * 4f * Time.deltaTime))),
+            rbody.velocity.z);
+        movement += rbody.velocity.y * Vector3.up;
       }
     }
 
@@ -515,6 +530,10 @@ class PlayerController : NetworkBehaviour {
     }
 
     // Camera
+    if(MiniMapCamera != null) {
+      MiniMapCamera.transform.position =
+          transform.position + miniMapRelativePosition;
+    }
     if (CameraObjectAvoidance && spawned) {
       RaycastHit hit;
       Physics.Linecast(

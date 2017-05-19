@@ -80,6 +80,7 @@ class PlayerShooter : MonoBehaviour {
     if (player == null) return;
     if (player.GetComponent<PlayerController>() == null) return;
     if (player.GetComponent<PlayerController>().isDead) return;
+    if (GameData.isPaused) return;
     projectilePlaceholder.transform.localPosition = localPosition;
 
     float shoot = Input.GetAxis("Fire1");
@@ -101,10 +102,12 @@ class PlayerShooter : MonoBehaviour {
           weaponDisplay.text += "Tertiary";
           break;
         default:
-          weaponDisplay.text += "None";
+          weaponDisplay.text += "Something broke...";
           break;
       }
     }
+
+    if (!player.GetComponent<PlayerController>().spawned) return;
 
     if (weapon == 1 && shoot > 0.5f && Time.time - lastShotTime > 0.2f) {
       //GameData.collectedCollectibles--;

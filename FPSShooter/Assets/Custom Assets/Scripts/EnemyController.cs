@@ -23,6 +23,8 @@ class EnemyController : MonoBehaviour {
  public
   bool spawnChildren = true;
  public
+  int maxTotalEnemies = 5;
+ public
   bool useNavMesh = false;
  public
   Sounds sounds;
@@ -80,11 +82,15 @@ class EnemyController : MonoBehaviour {
  public
   void Update() {
     if (player == null) {
-      GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+      PlayerController[] players =
+          GameObject.FindObjectsOfType<PlayerController>();
       if (players.Length >= 1) {
-        player = players[0];
+        player = players[0].gameObject;
       } else
         return;
+    }
+    if (!player.GetComponent<PlayerController>().spawned) {
+      return;
     }
     if (Time.time - spawnTime >= 1f) {
       UnityEngine.AI.NavMeshAgent agent =
@@ -115,12 +121,19 @@ class EnemyController : MonoBehaviour {
       UnityEngine.AI.NavMeshAgent agent =
           GetComponent<UnityEngine.AI.NavMeshAgent>();
       if (agent != null && agent.isOnNavMesh) {
-        if ((player.transform.position -
-             projectilePlaceholder.transform.position).magnitude <= 20f) {
+        if (Vector3.Distance(player.transform.position,
+                             projectilePlaceholder.transform.position) <= 20f &&
+            Vector3.Distance(agent.destination, player.transform.position) >
+                0.5f) {
           lastTargetPosition = target;
           agent.destination = player.transform.position + Vector3.up * 0.5f;
-        } else if (agent.remainingDistance > 0.1f) {
-          agent.destination = 10f * Random.insideUnitCircle;
+        } else if (agent.remainingDistance < 0.5 ||
+                   agent.destination == Vector3.zero) {
+          agent.destination =
+              new Vector3(transform.position.x + Random.Range(-15f, 15f),
+                          transform.position.y,
+                          transform.position.z + Random.Range(-15f, 15f));
+          lastTargetPosition = agent.destination;
         }
       }
     } else if(useNavMesh) {
@@ -219,7 +232,7 @@ class EnemyController : MonoBehaviour {
     // Spawn a copy at a random location around the player.
     PlayerController pc = player.GetComponent<PlayerController>();
     if (((pc != null && !pc.spawned) || Time.time - lastSpawnTime > 5.0f) &&
-        GameData.numEnemies < 10 && spawnChildren) {
+        GameData.numEnemies < maxTotalEnemies && spawnChildren) {
       lastSpawnTime = Time.time;
       //float X = Random.Range(0f, 350f);
       //float Z = Random.Range(0f, 350f);
@@ -236,10 +249,19 @@ class EnemyController : MonoBehaviour {
       if (nma != null) nma.enabled = false;
       Instantiate(gameObject, spawnPosition, Quaternion.identity);
       if (nma != null) nma.enabled = true;
+      Debug.Log("Enemy Spawned");
     }
     if (spawnChildren && GameData.numEnemies > 1 &&
-        Vector3.Distance(transform.position, player.transform.position) >
-            300f) {
+        Vector2.Distance(
+            new Vector2(transform.position.x, transform.position.z),
+            new Vector2(player.transform.position.x,
+                        player.transform.position.z)) > 300f) {
+      Debug.Log("Enemy Despawning " + transform.position + " - " +
+                player.transform.position + " = " +
+                Vector2.Distance(
+                    new Vector2(transform.position.x, transform.position.z),
+                    new Vector2(player.transform.position.x,
+                                player.transform.position.z)));
       Destroy(gameObject);
     }
   }

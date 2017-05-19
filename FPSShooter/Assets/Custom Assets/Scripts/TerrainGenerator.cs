@@ -266,7 +266,9 @@ public class TerrainGenerator : MonoBehaviour {
 
     times.lastUpdate = Time.time;
     if (GenMode.Perlin && !useSeed) {
-      Seed = (int)(500 * UnityEngine.Random.value);
+      for(int i=0; i<Time.realtimeSinceStartup; i++) {
+        Seed = (int)(500 * UnityEngine.Random.value);
+      }
     }
     if (Seed == 0) Seed = 1;
     if (GenMode.Perlin) {
@@ -914,6 +916,7 @@ public class TerrainGenerator : MonoBehaviour {
                    .terrList.GetComponents<Component>()) {
         if (!(comp is Transform) && !(comp is Terrain) &&
             !(comp is TerrainCollider) && !(comp is NavMeshSurface) &&
+            !(comp is NavMeshSourceTag) &&
             !(comp is UnityEngine.Networking.NetworkIdentity)) {
           Destroy(comp);
         }
@@ -921,7 +924,8 @@ public class TerrainGenerator : MonoBehaviour {
       foreach (Component comp in terrains[terrains.Count - 1]
                    .terrList.GetComponents<Component>()) {
         if (!(comp is Transform) && !(comp is Terrain) &&
-            !(comp is NavMeshSurface) && !(comp is TerrainCollider)) {
+            !(comp is NavMeshSourceTag) && !(comp is NavMeshSurface) &&
+            !(comp is TerrainCollider)) {
           Destroy(comp);
         }
       }
@@ -1163,7 +1167,7 @@ public class TerrainGenerator : MonoBehaviour {
       }
       float[, ] modifier = new float[ 2, 2 ];
       PerlinDivide(ref modifier, changeX, changeZ, 2, 2,
-                   PerlinSeedModifier * 2f, BiomeRoughness);
+                   PerlinSeedModifier, BiomeRoughness);
       PeakModifier = modifier[ 0, 0 ];
       if (terrIndex == -1) {
         Debug.LogError("Chunk was not generated before fractaling!\nIndex: " +
@@ -2401,7 +2405,8 @@ public class TerrainGenerator : MonoBehaviour {
       GetTerrainNameHolder.Append(",");
       GetTerrainNameHolder.Append(z);
       GetTerrainNameHolder.Append(")");
-      if (terrains[i].terrList.name.Equals(GetTerrainNameHolder.ToString())) {
+      if (terrains[i].terrList != null &&
+          terrains[i].terrList.name.Equals(GetTerrainNameHolder.ToString())) {
 #if DEBUG_ARRAY
         Debug.Log(
             terrains[i].terrList.name + "==" + GetTerrainNameHolder + " [" +
