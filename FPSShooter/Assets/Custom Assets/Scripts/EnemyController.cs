@@ -1,0 +1,277 @@
+using UnityEngine;
+
+public
+class EnemyController : MonoBehaviour {
+  [System.Serializable] public class Sounds {
+   public
+    AudioPlayer Player;
+   public
+    AudioClip ShootSound;
+  }
+ public
+  Projectile projectilePlaceholder;
+ public
+  GameObject projectileGun;
+ public
+  bool isRaycasting = true;
+ public
+  float projectile_speed;
+ public
+  int StartHealth = 5;
+ public
+  int health = 5;
+ public
+  bool spawnChildren = true;
+ public
+  bool useNavMesh = false;
+ public
+  Sounds sounds;
+
+ private
+  GameObject player;
+ private TerrainGenerator ground;
+ private
+  LineRenderer line;
+ private
+  bool shoot = false;
+ private
+  float spawnTime;
+ private
+  Vector3 lastTargetPosition;
+ private
+  Vector3 lastPosition;
+ private
+  Quaternion lastRotation;
+ private
+  Vector3 startPos;
+ private
+  float lastSpawnTime;
+ private
+  float lastShotTime;
+ private
+  float lastMoveTime;
+ public
+  void Awake() { GameData.numEnemies++; }
+ public
+  void Start() {
+    health = StartHealth;
+    ground = GameObject.FindObjectOfType<TerrainGenerator>();
+    startPos = transform.position;
+    lastTargetPosition = projectilePlaceholder.transform.position;
+    lastPosition = transform.position;
+    lastRotation = transform.rotation;
+    spawnTime = Time.time;
+    lastSpawnTime = Time.time;
+    lastShotTime = Time.time;
+    lastMoveTime = Time.time;
+    line = GetComponent<LineRenderer>();
+    line.startColor = Color.white;
+    line.endColor = Color.red;
+    line.startWidth = 0.1f;
+    line.endWidth = 0.01f;
+  }
+ public
+  void kill() {
+    // if(GameData.numEnemies-1 <= 0) {
+    //   GameData.nextLevel();
+    // }
+    Destroy(gameObject);
+  }
+ public
+  void Update() {
+    if (player == null) {
+      GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+      if (players.Length >= 1) {
+        player = players[0];
+      } else
+        return;
+    }
+    if (Time.time - spawnTime >= 1f) {
+      UnityEngine.AI.NavMeshAgent agent =
+          GetComponent<UnityEngine.AI.NavMeshAgent>();
+      if (agent != null) agent.enabled = true;
+    }
+
+    // Change the enemy's color to show remaining health.
+    if (health == 0) {
+      GetComponent<MeshRenderer>().material.color = Color.red;
+    } else if (health == 1) {
+      GetComponent<MeshRenderer>().material.color =
+          (Color.red + Color.yellow) / 2;
+    } else if (health == 2) {
+      GetComponent<MeshRenderer>().material.color = Color.yellow;
+    } else {
+      GetComponent<MeshRenderer>().material.color = Color.white;
+    }
+
+    if (GameData.isPaused) return;
+
+    // Move the point at which the enemy is aiming, towards the player with
+    // damping.
+    Vector3 target = Vector3.Lerp(lastTargetPosition,
+                                  player.transform.position + Vector3.up * 1.2f,
+                                  53.0f * Time.deltaTime);
+    if (useNavMesh && Time.time - spawnTime >= 10f) {
+      UnityEngine.AI.NavMeshAgent agent =
+          GetComponent<UnityEngine.AI.NavMeshAgent>();
+      if (agent != null && agent.isOnNavMesh) {
+        if ((player.transform.position -
+             projectilePlaceholder.transform.position).magnitude <= 20f) {
+          lastTargetPosition = target;
+          agent.destination = player.transform.position + Vector3.up * 0.5f;
+        } else if (agent.remainingDistance > 0.1f) {
+          agent.destination = 10f * Random.insideUnitCircle;
+        }
+      }
+    } else if(useNavMesh) {
+      GetComponent<MeshRenderer>().material.color =
+          Mathf.RoundToInt(Time.time) % 2 == 0 ? Color.red : Color.green;
+    }
+    // If the player is close enough, slowly move the enemy towards the player.
+    if (!useNavMesh &&
+        (player.transform.position - projectilePlaceholder.transform.position)
+                .magnitude <= 20f) {
+      lastTargetPosition = target;
+      startPos = transform.position;
+      lastMoveTime = Time.time;
+      startPos = Vector3.MoveTowards(
+          startPos, player.transform.position + Vector3.up * 1.2f,
+          2.0f * Time.deltaTime);
+      transform.position = startPos;
+    } else if (!useNavMesh) {
+      lastTargetPosition =
+          Quaternion.Euler(0, 2.0f, 0) *
+          (lastTargetPosition + transform.position - lastPosition);
+      // The enemy moves in a pattern in respect to time and it's starting
+      // position.
+      transform.position =
+          Vector3.Lerp(startPos, startPos + Vector3.forward * 3,
+                       Mathf.Abs((1 + Time.time - lastMoveTime) % 3 - 1));
+      transform.position = Vector3.Lerp(
+          transform.position, transform.position + Vector3.left * 3,
+          Mathf.Abs((2 + Time.time - lastMoveTime) % 4 - 2));
+    }
+    // Keep the enemy a constant distance off the ground.
+    if (!useNavMesh && ground != null) {
+      transform.position = new Vector3(transform.position.x,
+                                       ground.GetTerrainHeight(gameObject) + 1f,
+                                       transform.position.z);
+    }
+    lastPosition = transform.position;
+
+    projectilePlaceholder.transform.LookAt(lastTargetPosition);
+
+    // Raycasting means the enemy is checking to make sure the player is close,
+    // and there are no obstacles between the player and the enemy, before
+    // shooting.
+    if (isRaycasting) {
+      RaycastHit raycast;
+      Physics.Raycast(projectilePlaceholder.transform.position,
+                      projectilePlaceholder.transform.forward, out raycast, 20f,
+                      ~(1 << 2));
+
+      shoot = false;
+      line.SetPosition(0, projectilePlaceholder.transform.position);
+      line.SetPosition(1, projectilePlaceholder.transform.position +
+                              projectilePlaceholder.transform.forward * 10f);
+      if (line != null && raycast.transform != null) {
+        if (raycast.transform.gameObject == player && raycast.distance <= 10f) {
+          shoot = true;
+          lastShotTime -= (10 - raycast.distance) / 20f;
+        }
+      }
+    }
+
+    // Keep the gun and gameObject pointed in the same direction as the
+    // projectilePlaceholder with some damping.
+    projectileGun.transform.rotation =
+        projectilePlaceholder.transform.rotation * Quaternion.Euler(180f, 0, 0);
+    if (!useNavMesh) {
+      Quaternion rotationOffset = Quaternion.Euler(0f, 0f, 90f);
+      transform.rotation =
+          Quaternion.Lerp(lastRotation, projectileGun.transform.rotation,
+                          0.1f) *
+          rotationOffset;
+      lastRotation = transform.rotation * Quaternion.Inverse(rotationOffset);
+    }
+
+    // Shoot a projectile towards the player at an interval and if raycasting,
+    // then only when the player is close enough.
+    if (Time.time - lastShotTime > 1.75f && (!isRaycasting || shoot)) {
+      lastShotTime = Time.time;
+      Projectile projectile = Instantiate(
+          projectilePlaceholder, projectilePlaceholder.transform.position,
+          projectilePlaceholder.transform.rotation, transform);
+
+      projectile.placeholder = false;
+
+      projectile.GetComponent<Rigidbody>().velocity =
+          projectile.transform.forward * projectile_speed;
+
+      projectile.transform.Rotate(new Vector3(90f, 0, 0));
+
+      Physics.IgnoreCollision(GetComponent<Collider>(),
+                              projectile.GetComponent<Collider>());
+      projectile.transform.parent = null;
+      PlaySound(sounds.ShootSound);
+    }
+
+    // Spawn a copy at a random location around the player.
+    PlayerController pc = player.GetComponent<PlayerController>();
+    if (((pc != null && !pc.spawned) || Time.time - lastSpawnTime > 5.0f) &&
+        GameData.numEnemies < 10 && spawnChildren) {
+      lastSpawnTime = Time.time;
+      //float X = Random.Range(0f, 350f);
+      //float Z = Random.Range(0f, 350f);
+      float X = Random.Range(-200f, 200f);
+      float Z = Random.Range(-200f, 200f);
+      Vector3 spawnPosition =
+          new Vector3(player.transform.position.x + X,
+                      ground.GetTerrainHeight(X + player.transform.position.x,
+                                              Z + player.transform.position.z),
+                      player.transform.position.z + Z);
+          //new Vector3(X, ground.GetTerrainHeight(X, Z), Z);
+      UnityEngine.AI.NavMeshAgent nma =
+          GetComponent<UnityEngine.AI.NavMeshAgent>();
+      if (nma != null) nma.enabled = false;
+      Instantiate(gameObject, spawnPosition, Quaternion.identity);
+      if (nma != null) nma.enabled = true;
+    }
+    if (spawnChildren && GameData.numEnemies > 1 &&
+        Vector3.Distance(transform.position, player.transform.position) >
+            300f) {
+      Destroy(gameObject);
+    }
+  }
+
+  void PlaySound(AudioClip clip) {
+    if (sounds.Player != null && clip != null && GameData.soundEffects) {
+      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      player.clip = clip;
+    }
+  }
+
+ public
+  void OnDestroy() {
+    GameData.numEnemies--;
+  }
+
+ public
+  void OnTriggerEnter(Collider other) {
+    if (other.gameObject.CompareTag("Explosion")) {
+      Debug.Log("Enemy was exploded.");
+      kill();
+    }
+  }
+ public
+  void OnCollisionEnter(Collision other) {
+    if (other.gameObject.GetComponent<Projectile>() != null) {
+      Destroy(other.gameObject);
+      health--;
+      if(health<0) {
+        Debug.Log("Enemy has no health: Dying.");
+        kill();
+      }
+    }
+  }
+}
