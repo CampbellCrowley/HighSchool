@@ -1,12 +1,18 @@
 ﻿private
 var revertFogState = false;
+var myCamera;
 
-function Start() {
-  var aspect = Screen.width / Screen.height;
+function Start() { myCamera = GetComponent(Camera); }
+
+function Update() {
+  var aspect = (Screen.width + 0.0) / Screen.height;
   var height = .25f;
   var width = height / aspect;
   var rect = new Rect(1 - width - 0.01, 1 - height - 0.01, width, height);
-  gameObject.GetComponent(Camera).rect = rect;
+  if(myCamera.rect != rect) {
+    myCamera.rect = rect;
+    Debug.Log("MiniMap Camera Controller Updated!");
+  }
 }
 
 function OnPreRender() {
@@ -15,5 +21,3 @@ function OnPreRender() {
 }
 
 function OnPostRender() { RenderSettings.fog = revertFogState; }
-
-@script RequireComponent(Camera)
