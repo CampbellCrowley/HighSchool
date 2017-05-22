@@ -44,6 +44,8 @@ class GameData : MonoBehaviour {
  public
   static bool isPaused = false;
  public
+  static bool inVehicle = false;
+ public
   static string username = "Username";
  public
   static int numEnemies = 0;
@@ -56,16 +58,19 @@ class GameData : MonoBehaviour {
  public
   static void nextLevel() {
     Debug.Log("Next Level!");
+    inVehicle = false;
     SceneManager.LoadScene(getLevel() + 1);
   }
  public
   static void restartLevel() {
     Debug.Log("Restarting Level!");
+    inVehicle = false;
     SceneManager.LoadScene(getLevel());
   }
  public
   static void MainMenu() {
     Debug.Log("Menu!");
+    inVehicle = false;
     UnityEngine.Networking.MyNetworkManagerHUD.requestDisconnect = true;
     SceneManager.LoadScene(0);
     health = 5;

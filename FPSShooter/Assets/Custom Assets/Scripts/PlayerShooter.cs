@@ -21,6 +21,16 @@ class PlayerShooter : MonoBehaviour {
   Projectile bombPlaceholder;
  public
   float projectile_speed;
+ public
+  float weapon1ShotDelay = 0.2f;
+ public
+  float weapon2ShotDelay = 5.0f;
+ public
+  float weapon3ShotDelay = 0.5f;
+
+ public
+  static float reloadTime = 0.0f;
+
  private
   float lastShotTime = 0;
  private
@@ -81,25 +91,47 @@ class PlayerShooter : MonoBehaviour {
     if (player.GetComponent<PlayerController>() == null) return;
     if (player.GetComponent<PlayerController>().isDead) return;
     if (GameData.isPaused) return;
+    if (GameData.inVehicle) return;
     projectilePlaceholder.transform.localPosition = localPosition;
 
     float shoot = Input.GetAxis("Fire1");
     float shoot2 = Input.GetAxis("Fire2");
-    if(Input.GetKey("1")) weapon = 1;
-    if(Input.GetKey("2")) weapon = 2;
-    if(Input.GetKey("3")) weapon = 3;
+    float ScrollWheel = Input.GetAxis("Mouse ScrollWheel");
+    if (ScrollWheel < 0) weapon--;
+    if (ScrollWheel > 0) weapon++;
+    if (Input.GetKey("1") || weapon < 1) weapon = 1;
+    if (Input.GetKey("2")) weapon = 2;
+    if (Input.GetKey("3") || weapon > 3) weapon = 3;
 
-    if(weaponDisplay != null) {
+    if (weaponDisplay != null) {
       weaponDisplay.text = "Weapon: ";
       switch (weapon) {
         case 1:
+          reloadTime = Time.time - lastShotTime - weapon1ShotDelay;
+          if (reloadTime > 0) reloadTime = 0;
+          else reloadTime = Mathf.Abs(reloadTime);
           weaponDisplay.text += "Primary";
+          for (int i = 0; i < reloadTime; i++) {
+            weaponDisplay.text += ".";
+          }
           break;
         case 2:
+          reloadTime = Time.time - lastShotTime - weapon2ShotDelay;
+          if (reloadTime > 0) reloadTime = 0;
+          else reloadTime = Mathf.Abs(reloadTime);
           weaponDisplay.text += "Secondary";
+          for (int i = 0; i < reloadTime; i++) {
+            weaponDisplay.text += ".";
+          }
           break;
         case 3:
+          reloadTime = Time.time - lastShotTime - weapon3ShotDelay;
+          if (reloadTime > 0) reloadTime = 0;
+          else reloadTime = Mathf.Abs(reloadTime);
           weaponDisplay.text += "Tertiary";
+          for (int i = 0; i < reloadTime; i++) {
+            weaponDisplay.text += ".";
+          }
           break;
         default:
           weaponDisplay.text += "Something broke...";
@@ -107,9 +139,20 @@ class PlayerShooter : MonoBehaviour {
       }
     }
 
+    if (Crosshair != null) {
+      Crosshair.text = "+";
+      if (reloadTime > 0) {
+        Crosshair.text += "\nReloading";
+        for (int i = 0; i < reloadTime; i++) {
+          Crosshair.text += ".";
+        }
+      }
+    }
+
     if (!player.GetComponent<PlayerController>().spawned) return;
 
-    if (weapon == 1 && shoot > 0.5f && Time.time - lastShotTime > 0.2f) {
+    if (weapon == 1 && shoot > 0.5f &&
+        Time.time - lastShotTime > weapon1ShotDelay) {
       //GameData.collectedCollectibles--;
       lastShotTime = Time.time;
       PlaySound(sounds.Sound1);
@@ -123,34 +166,38 @@ class PlayerShooter : MonoBehaviour {
                               projectile.GetComponent<Collider>());
       projectile.GetComponent<Rigidbody>().useGravity = true;
       projectile.transform.parent = null;
-    } else if (weapon == 2 && shoot > 0.5f && Time.time - lastShotTime > 0.3f) {
+    } else if (weapon == 2 && shoot > 0.0f &&
+               Time.time - lastShotTime > weapon2ShotDelay) {
       //GameData.collectedCollectibles -= 2;
       PlaySound(sounds.Sound2);
       lastShotTime = Time.time;
       RaycastHit raycast;
       Physics.Raycast(
           projectilePlaceholder.transform.position - Vector3.up * 0.01f,
-          transform.rotation * Vector3.forward, out raycast, 15f, ~(1 << 8));
+          transform.rotation * Vector3.forward, out raycast, 100f, ~(1 << 8));
 
       if (line != null && raycast.transform != null) {
         line.enabled = true;
-        line.SetPosition(0, projectilePlaceholder.transform.position);
+        line.SetPosition(
+            0, projectilePlaceholder.transform.position - Vector3.up * 0.1f);
         EnemyController enemy =
             raycast.transform.gameObject.GetComponent<EnemyController>();
         if (enemy != null && (enemy.health -= 2) <= 0) {
           enemy.kill();
           line.SetPosition(1, raycast.transform.position);
         } else {
-          line.SetPosition(1, projectilePlaceholder.transform.position +
-                                  transform.rotation * (Vector3.forward * 10f));
+          line.SetPosition(1,
+                           projectilePlaceholder.transform.position +
+                               transform.rotation * (Vector3.forward * 100f));
         }
       } else {
         line.enabled = true;
         line.SetPosition(0, projectilePlaceholder.transform.position);
         line.SetPosition(1, projectilePlaceholder.transform.position +
-                                transform.rotation * (Vector3.forward * 10f));
+                                transform.rotation * (Vector3.forward * 100f));
       }
-    } else if (weapon == 3 && shoot > 0.5f && Time.time - lastShotTime > 0.5f) {
+    } else if (weapon == 3 && shoot > 0.5f &&
+               Time.time - lastShotTime > weapon3ShotDelay) {
       //GameData.collectedCollectibles--;
       PlaySound(sounds.Sound3);
       lastShotTime = Time.time;
@@ -184,7 +231,7 @@ class PlayerShooter : MonoBehaviour {
       projectile.transform.parent = null;
     }
 
-    if (line != null && Time.time - lastShotTime > 0.1f) {
+    if (line != null && Time.time - lastShotTime > 0.25f) {
       line.enabled = false;
     }
   }

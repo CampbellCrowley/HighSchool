@@ -39,7 +39,7 @@ class InitPlayer : MonoBehaviour {
         groundHeight = TerrainGenerator.waterHeight;
       transform.position += Vector3.forward * Time.deltaTime * moveSpeed;
       transform.position =
-          Mathf.Lerp(transform.position.y, groundHeight + 100f,
+          Mathf.Lerp(transform.position.y, groundHeight + spawnHeight,
                      1.0f * Time.deltaTime) *
               Vector3.up +
           transform.position.x * Vector3.right +
