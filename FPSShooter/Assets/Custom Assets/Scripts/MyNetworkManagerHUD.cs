@@ -9,9 +9,8 @@ public class MyNetworkManagerHUD : MonoBehaviour{
   
 [SerializeField]
 public bool showGUI = true;
-private NetworkManager manager;
+public NetworkManager manager;
 private string tempPort;
-public static bool requestDisconnect = false;
 
 void Awake() {
   manager = GetComponent<NetworkManager>();
@@ -38,13 +37,22 @@ void Update() {
     }
   }
   if (NetworkServer.active && NetworkClient.active) {
-      if (Input.GetKeyDown(KeyCode.X) ||
-          MyNetworkManagerHUD.requestDisconnect) {
-      MyNetworkManagerHUD.requestDisconnect = false;
+    if (GameData.isPaused && Input.GetKeyDown(KeyCode.X)) {
+      GameData.isPaused = false;
       manager.StopHost();
     }
   }
 }
+
+public
+ static void changeLevel(SceneManagement.Scene level) {
+   Debug.Log("Changing Level to " + level.name);
+   FindObjectOfType<UnityEngine.Networking.NetworkManager>().ServerChangeScene(
+       level.name);
+ }
+
+public
+ static string getLevel() { return NetworkManager.networkSceneName; }
 
 public
 void OnGUI() {
@@ -114,13 +122,13 @@ void OnGUI() {
       foreach (NetworkConnection con in NetworkServer.connections) {
         if (con != null) numConnected++;
       }
-      GUI.contentColor = Color.black;
+      GUI.contentColor = GameData.isPaused ? Color.white : Color.black;
       GUI.Label(new Rect(xpos, ypos, 300, 40),
                 "Server: Local= " + Network.player.ipAddress + " port=" +
                     manager.networkPort + "\nPlayers: " + numConnected);
       ypos += spacing;
     } else if (NetworkClient.active) {
-      GUI.contentColor = Color.black;
+      GUI.contentColor = GameData.isPaused ? Color.white : Color.black;
       GUI.Label(new Rect(xpos, ypos, 300, 20),
                 "Client: address=" + manager.networkAddress + " port=" +
                     manager.networkPort);
@@ -129,9 +137,9 @@ void OnGUI() {
   }
 
   if (NetworkClient.active && !ClientScene.ready) {
+    GUI.contentColor = GameData.isPaused ? Color.white : Color.black;
     if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Client Ready")) {
       ClientScene.Ready(manager.client.connection);
-
       if (ClientScene.localPlayers.Count == 0) {
         ClientScene.AddPlayer(0);
       }
@@ -140,7 +148,9 @@ void OnGUI() {
   }
 
   if (NetworkServer.active || NetworkClient.active) {
-    if (GUI.Button(new Rect(xpos, ypos, 200, 20), "Stop (X)")) {
+    if (GameData.isPaused &&
+        GUI.Button(new Rect(xpos, ypos, 200, 20), "Return to Main Menu (X)")) {
+      GameData.isPaused = false;
       manager.StopHost();
     }
     ypos += spacing;

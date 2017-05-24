@@ -135,6 +135,8 @@ class PlayerController : NetworkBehaviour {
  private
   float endTime = 0f;
  private
+  Vector3 spawnLocation;
+ private
   float staminaRemaining = 1.0f;
  private
   float levelStartTime = 0f;
@@ -187,7 +189,6 @@ class PlayerController : NetworkBehaviour {
       if (step != null) step.LoadAudioData();
     }
     GameData.showCursor = false;
-    UnDead();
 
     anim = GetComponent<Animator>();
     rbody = GetComponent<Rigidbody>();
@@ -264,16 +265,28 @@ class PlayerController : NetworkBehaviour {
 
     if (usernameOSD != null) usernameOSD.text = nameplate.text;
 
+    if (Input.GetKeyDown("k")) {
+      GameData.health = 0;
+      GameData.tries = 0;
+      Dead();
+    }
     if (isDead) {
       if (Time.realtimeSinceStartup - deathTime >= 8f) {
-        if (GameData.health > 0)
-          GameData.restartLevel();
-        else
-          GameData.MainMenu();
+        if (GameData.health > 0) {
+          UnDead();
+          // GameData.restartLevel();
+        } else {
+          if (GameData.tries > 0) {
+            UnDead();
+            // GameData.restartLevel();
+          } else {
+            GameData.MainMenu();
+          }
+        }
       } else {
         Time.timeScale = Mathf.Lerp(
             // 0.05f, 0.1f, (Time.realtimeSinceStartup - deathTime) / 3f);
-            0.05f, 1.0f, (Time.realtimeSinceStartup - deathTime) / 8f);
+            0.1f, 0.5f, (Time.realtimeSinceStartup - deathTime) / 8f);
         Time.fixedDeltaTime = 0.02f * Time.timeScale;
       }
     }
@@ -333,22 +346,22 @@ class PlayerController : NetworkBehaviour {
       levelStartTime = Time.time;
       Camera.transform.rotation = Quaternion.Euler(70f, 30f, 0f);
       cameraSpawnRotation = Camera.transform.rotation;
+      spawnLocation = transform.position;
     } else {
       spawned = true;
     }
 
     // Vehicles
-    VehicleController Vehicle = FindObjectOfType<VehicleController>();
-    if (Vehicle != null) {
-      Vehicle.UpdateInputs(moveVertical, moveHorizontal, lookHorizontal,
-                           lookVertical, sprintInput,
-                           Camera.GetComponent<Camera>());
+    VehicleController[] Vehicle = FindObjectsOfType<VehicleController>();
+    foreach(VehicleController V in Vehicle) {
+      V.UpdateInputs(moveVertical, moveHorizontal, lookHorizontal, lookVertical,
+                     sprintInput, Camera.GetComponent<Camera>());
     }
     timeInVehicle += Time.deltaTime;
-    if (GameData.inVehicle) {
+    if (GameData.Vehicle != null) {
       transform.position =
-          Vehicle.gameObject.transform.position + Vector3.up * 0.25f;
-      transform.rotation = Vehicle.gameObject.transform.rotation;
+          GameData.Vehicle.gameObject.transform.position + Vector3.up * 0.25f;
+      transform.rotation = GameData.Vehicle.gameObject.transform.rotation;
       if (MiniMapCamera != null) {
         MiniMapCamera.transform.position =
             transform.position + miniMapRelativePosition;
@@ -362,15 +375,17 @@ class PlayerController : NetworkBehaviour {
       isGrounded = true;
       jump = false;
       if (timeInVehicle < 1.0f) {
-        Vehicle.UpdateInputs(moveVertical, moveHorizontal, lookHorizontal,
-                             lookVertical, sprintInput,
-                             Camera.GetComponent<Camera>());
+        GameData.Vehicle.UpdateInputs(moveVertical, moveHorizontal,
+                                      lookHorizontal, lookVertical, sprintInput,
+                                      Camera.GetComponent<Camera>());
       }
       if (interact > 0.5 && timeInVehicle > 0.5f) {
         timeInVehicle = 0.0f;
-        GameData.inVehicle = false;
+        GameData.Vehicle = null;
 
         GetComponent<Collider>().enabled = true;
+
+        transform.position += Vector3.up * 2f;
 
         SkinnedMeshRenderer[] renderers =
             GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -387,7 +402,8 @@ class PlayerController : NetworkBehaviour {
       if (raycast.transform != null &&
           raycast.transform.CompareTag("Vehicle")) {
         if (interact > 0.5f && timeInVehicle > 0.5f) {
-          GameData.inVehicle = true;
+          GameData.Vehicle =
+              raycast.transform.gameObject.GetComponent<VehicleController>();
           timeInVehicle = 0.0f;
           GetComponent<Collider>().enabled = false;
           SkinnedMeshRenderer[] renderers =
@@ -396,7 +412,12 @@ class PlayerController : NetworkBehaviour {
             r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
           }
         } else {
-          usernameOSD.text += "\nPress \"E\" to enter boat";
+          usernameOSD.text +=
+              "\nPress \"E\" to enter " +
+              (raycast.transform.gameObject.GetComponent<VehicleController>()
+                       .isBoat
+                   ? "boat"
+                   : "car");
         }
       }
     }
@@ -423,10 +444,10 @@ class PlayerController : NetworkBehaviour {
             Mathf.Lerp(spawnCameraDistance, intendedCameraDistance,
                        (Time.time - levelStartTime) / flyDownTime);
       }
-      if(GameData.inVehicle) {
+      if(GameData.Vehicle != null) {
         timeInVehicle += Time.deltaTime;
-        transform.position = Vehicle.gameObject.transform.position;
-        if (interact > 0.5 && timeInVehicle > 0.5f) GameData.inVehicle = false;
+        transform.position = GameData.Vehicle.gameObject.transform.position;
+        if (interact > 0.5 && timeInVehicle > 0.5f) GameData.Vehicle = null;
       }
       moveHorizontal = 0;
       moveVertical = 0;
@@ -487,48 +508,70 @@ class PlayerController : NetworkBehaviour {
     }
 
     // HUD
-    if (collectedCounter != null) {
-      collectedCounter.text =
-          "Bombs Remaining: " + GameData.collectedCollectibles;
-    }
-    if (lifeCounter != null) {
-      lifeCounter.text = GameData.health + " Health";
-    }
-    if (stamina != null) {
-      stamina.text = "Stamina: ";
-      for (int i = 0; i < (int)(staminaRemaining * staminaCountBars); i++) {
-        stamina.text += "|";
+    if (!GameData.isPaused) {
+      if (collectedCounter != null) {
+        collectedCounter.text =
+            "Bombs Remaining: " + GameData.collectedCollectibles;
       }
-      for (int i = (int)(staminaCountBars * staminaRemaining);
-           i < staminaCountBars; i++) {
-        stamina.text += "!";
+      if (GameData.Vehicle == null) {
+        if (lifeCounter != null) {
+          lifeCounter.text =
+              GameData.health + " Health, " + GameData.tries + " Tries";
+        }
+        if (stamina != null) {
+          stamina.text = "Stamina: ";
+          for (int i = 0; i < (int)(staminaRemaining * staminaCountBars); i++) {
+            stamina.text += "|";
+          }
+          for (int i = (int)(staminaCountBars * staminaRemaining);
+               i < staminaCountBars; i++) {
+            stamina.text += "!";
+          }
+        }
       }
-    }
-    if (timer != null) {
-      float timeRemaining = Mathf.Round((endTime - Time.time) * 10f) / 10f;
-      if (endTime == 0f) timeRemaining = GameTime;
-      string timeRemaining_ = "";
-      if (timeRemaining > 0) {
-        timeRemaining_ += timeRemaining;
-      } else {
-        timeRemaining_ += "0.0";
+      if (timer != null) {
+        float timeRemaining = Mathf.Round((endTime - Time.time) * 10f) / 10f;
+        if (endTime == 0f) timeRemaining = GameTime;
+        string timeRemaining_ = "";
+        if (timeRemaining > 0) {
+          timeRemaining_ += timeRemaining;
+        } else {
+          timeRemaining_ += "0.0";
+        }
+        if (timeRemaining % 1 == 0 && timeRemaining > 0) timeRemaining_ += ".0";
+        timer.text = timeRemaining_;
+        if (!isDead && timeRemaining <= 0.7f * 4f) {
+          Time.timeScale = timeRemaining / 4f + 0.3f;
+          Time.fixedDeltaTime = 0.02f * Time.timeScale;
+        }
+        if (!isDead && timeRemaining <= 0) {
+          GameData.health--;
+          Dead();
+        }
       }
-      if (timeRemaining % 1 == 0 && timeRemaining > 0) timeRemaining_ += ".0";
-      timer.text = timeRemaining_;
-      if (!isDead && timeRemaining <= 0.7f * 4f) {
-        Time.timeScale = timeRemaining / 4f + 0.3f;
-        Time.fixedDeltaTime = 0.02f * Time.timeScale;
+    } else {
+      if (collectedCounter != null) {
+        collectedCounter.text = "";
       }
-      if (!isDead && timeRemaining <= 0) {
-        GameData.health--;
-        Dead();
+      if (lifeCounter != null) {
+        lifeCounter.text = "";
+      }
+      if (stamina != null) {
+        stamina.text = "";
+      }
+      if (timer != null) {
+        endTime += Time.deltaTime;
+        timer.text = "";
+      }
+      if(usernameOSD !=null) {
+        usernameOSD.text = "";
       }
     }
     if (levelDisplay != null) {
       levelDisplay.text = "Level: " + GameData.getLevel();
     }
 
-    if (!GameData.inVehicle) {
+    if (GameData.Vehicle == null) {
       // Movement
       Vector3 movement =
           moveHorizontal * Vector3.right + moveVertical * Vector3.forward;
@@ -685,12 +728,11 @@ class PlayerController : NetworkBehaviour {
         Transform target = transform;
         target.position += Vector3.up * 1.2f;
         foreach (Transform target_ in children) {
-          if (target_.name.Contains("Head")) {
+          if (target_.name.Contains("Head_M")) {
             target = target_;
             break;
           }
         }
-        Debug.Log("Target: " + target);
         Quaternion startRot = Camera.transform.rotation;
         Camera.transform.LookAt(target.position + Vector3.up * 0.2f);
         Camera.transform.rotation =
@@ -708,9 +750,9 @@ class PlayerController : NetworkBehaviour {
           enemydistance = tempdist;
         }
       }
-      vignette = 0.45f - (enemydistance / 50f);
+      vignette = 0.45f - (enemydistance / 150f);
       vignette =
-          Mathf.Lerp(lastVignetteAmount, vignette, 1.0f * Time.deltaTime);
+          Mathf.Lerp(lastVignetteAmount, vignette, 2.0f * Time.deltaTime);
       lastVignetteAmount = vignette;
       try {
         Camera.GetComponent<VignetteAndChromaticAberration>().intensity =
@@ -718,10 +760,10 @@ class PlayerController : NetworkBehaviour {
       } catch (System.NullReferenceException e) {
       }
       if (Camera.transform.position.y > TerrainGenerator.waterHeight) {
-        RenderSettings.fogStartDistance = 300 * (1 - (vignette / 0.40f));
-        RenderSettings.fogEndDistance = 500 * (1 - (vignette / 0.40f));
+        RenderSettings.fogStartDistance = 300 * (1 - (vignette / 0.45f));
+        RenderSettings.fogEndDistance = 500 * (1 - (vignette / 0.45f));
         RenderSettings.fogColor =
-            Color.Lerp(startColor, Color.red, (vignette / 0.40f));
+            Color.Lerp(startColor, Color.red, (vignette / 0.45f));
       } else {  // Underwater
         RenderSettings.fogStartDistance =
             Mathf.Lerp(RenderSettings.fogStartDistance, 0f, 0.5f);
@@ -768,7 +810,8 @@ class PlayerController : NetworkBehaviour {
   void Dead() {
     if (isDead) return;
     isDead = true;
-    if (GameData.health <= 0) {
+    GameData.tries--;
+    if (GameData.tries <= 0) {
       PlaySound(sounds.LevelFail, 1.0f);
     } else {
       PlaySound(sounds.Pain, 1.0f);
@@ -801,8 +844,19 @@ class PlayerController : NetworkBehaviour {
     }
   }
   void UnDead() {
+    transform.position = spawnLocation;
+    transform.rotation = Quaternion.identity;
+    Camera.transform.rotation = cameraSpawnRotation;
+    spawned = false;
+    isDead = false;
+    GameData.health = 5;
     Time.timeScale = 1.0f;
     Time.fixedDeltaTime = 0.02f * Time.timeScale;
+    MaxCameraDistance -= 10;
+    GetComponent<Rigidbody>().isKinematic = false;
+    Destroy(Ragdoll);
+    GetComponent<CapsuleCollider>().enabled = true;
+    GetComponent<Animator>().enabled = true;
   }
 
   void OnAnimatorIK() {
@@ -836,23 +890,14 @@ class PlayerController : NetworkBehaviour {
       Destroy(other.gameObject);
       GameData.collectedCollectibles += 10;
       PlaySound(sounds.CollectibleSound);
-    } else if (other.gameObject.CompareTag("Enemy")) {
-      if (GameData.getLevel() == 3) {
-        GameData.health = 0;
-        Dead();
-      } else {
-        GameData.health--;
-        Dead();
-      }
+    } else if (other.gameObject.CompareTag("Explosion") ||
+               other.gameObject.CompareTag("Enemy")) {
+      GameData.health = 0;
+      Dead();
     } else if (other.gameObject.CompareTag("EnemyProjectile")) {
       Destroy(other.gameObject);
-      if (GameData.getLevel() == 3) {
-        GameData.health = 0;
-        Dead();
-      } else {
-        GameData.health--;
-        Dead();
-      }
+      GameData.health--;
+      Dead();
     } else if (other.gameObject.CompareTag("Portal")) {
       if (GameData.levelComplete()) {
         GameData.nextLevel();

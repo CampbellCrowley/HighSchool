@@ -38,13 +38,15 @@ class GameData : MonoBehaviour {
  public
   static int health = 5;
  public
+  static int tries = 3;
+ public
   static int collectedCollectibles = 10000;
  public
   static bool showCursor = true;
  public
   static bool isPaused = false;
  public
-  static bool inVehicle = false;
+  static VehicleController Vehicle;
  public
   static string username = "Username";
  public
@@ -54,26 +56,49 @@ class GameData : MonoBehaviour {
     return numEnemies == 0;
   }
  public
-  static int getLevel() { return SceneManager.GetActiveScene().buildIndex; }
+  static int getLevel() {
+    // return SceneManager
+    //     .GetSceneByName(UnityEngine.Networking.MyNetworkManagerHUD.getLevel())
+    //     .buildIndex;
+    return SceneManager.GetActiveScene().buildIndex;
+  }
  public
   static void nextLevel() {
-    Debug.Log("Next Level!");
-    inVehicle = false;
-    SceneManager.LoadScene(getLevel() + 1);
+    int nextIndex = getLevel() + 1;
+    Debug.Log("Next Level! (" + nextIndex + ")");
+    GameData.Vehicle = null;
+    GameData.isPaused = false;
+    // UnityEngine.Networking.MyNetworkManagerHUD.changeLevel(
+    //    SceneManager.GetSceneByBuildIndex(getLevel() + 1));
+    SceneManager.LoadScene(nextIndex);
+    FindObjectOfType<UnityEngine.Networking.NetworkManager>()
+        .ServerChangeScene(SceneManager.GetSceneByBuildIndex(nextIndex).name);
   }
  public
   static void restartLevel() {
     Debug.Log("Restarting Level!");
-    inVehicle = false;
-    SceneManager.LoadScene(getLevel());
+    GameData.Vehicle = null;
+    GameData.isPaused = false;
+    GameData.health = 5;
+    FindObjectOfType<UnityEngine.Networking.NetworkManager>()
+        .ServerChangeScene(SceneManager.GetSceneByBuildIndex(getLevel()).name);
   }
  public
   static void MainMenu() {
     Debug.Log("Menu!");
-    inVehicle = false;
-    UnityEngine.Networking.MyNetworkManagerHUD.requestDisconnect = true;
-    SceneManager.LoadScene(0);
-    health = 5;
+    GameData.Vehicle = null;
+    GameData.isPaused = false;
+    // SceneManager.UnloadSceneAsync("DontDestroyOnLoad");
+    // SceneManager.LoadScene(0);
+    // UnityEngine.Networking.MyNetworkManagerHUD.manager.ServerChangeScene(
+    //     SceneManager.GetSceneByBuildIndex(0).name);
+    // UnityEngine.Networking.NetworkManager.Shutdown();
+    // UnityEngine.Networking.MyNetworkManagerHUD.manager.StopClient();
+    // UnityEngine.Networking.ClientScene.DestroyAllClientObjects();
+    FindObjectOfType<UnityEngine.Networking.NetworkManager>().StopHost();
+    // UnityEngine.Networking.NetworkClient.ShutdownAll();
+    GameData.health = 5;
+    GameData.tries = 3;
   }
  public
   static void quit() {
@@ -83,6 +108,10 @@ class GameData : MonoBehaviour {
 
  public
   void Update() {
+    if (Vehicle != null && getLevel() == 1 && Vehicle.name.Contains("boat")) {
+      nextLevel();
+    }
+
     if(Input.GetButtonDown("Pause") && getLevel() != 0) {
       GameData.isPaused = !GameData.isPaused;
       GameData.showCursor = isPaused;
@@ -97,9 +126,9 @@ class GameData : MonoBehaviour {
     }
     Cursor.visible = showCursor;
     Cursor.lockState = showCursor ? CursorLockMode.None : CursorLockMode.Locked;
-    /*if (Input.GetAxis("Skip") > 0.5f) {
+    if (getLevel() > 0 && Input.GetAxis("Skip") > 0.5f) {
       nextLevel();
-    }*/
+    }
     if (MusicPlayer != null) {
       float goalVol = music ? 0.5f : 0.0f;
       if(QueuedMusic != null && QueuedMusic != MusicPlayer.clip) {

@@ -1,5 +1,3 @@
-////////////////////////////////////////////////////////////////////
-// WARNING: MANY DEBUG SETTINGS MAY CAUSE IMMENSE AMOUNTS OF LAG! //
 //                      USE WITH CAUTION!                         //
 ////////////////////////////////////////////////////////////////////
 // #define DEBUG_ARRAY
@@ -2402,7 +2400,7 @@ public class TerrainGenerator : MonoBehaviour {
       newTrees[i].lightmapColor = new Color(1, 1, 1);
       newTrees[i].heightScale = 1.0f;
       newTrees[i].widthScale = 1.0f;
-      newTrees[i].position = new Vector3(X, Y / terrHeight, Z);
+      newTrees[i].position = new Vector3(X, (Y - 2f) / terrHeight, Z);
     }
 
     terrainData.treeInstances = newTrees;

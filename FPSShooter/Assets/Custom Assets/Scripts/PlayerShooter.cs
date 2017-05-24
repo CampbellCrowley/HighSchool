@@ -90,8 +90,12 @@ class PlayerShooter : MonoBehaviour {
     if (player == null) return;
     if (player.GetComponent<PlayerController>() == null) return;
     if (player.GetComponent<PlayerController>().isDead) return;
-    if (GameData.isPaused) return;
-    if (GameData.inVehicle) return;
+    if (GameData.Vehicle != null) return;
+    if (GameData.isPaused) {
+      if (weaponDisplay != null) weaponDisplay.text = "";
+      if (Crosshair != null) Crosshair.text = "";
+      return;
+    }
     projectilePlaceholder.transform.localPosition = localPosition;
 
     float shoot = Input.GetAxis("Fire1");

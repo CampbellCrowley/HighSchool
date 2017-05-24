@@ -10,6 +10,17 @@ class ExplosionController : MonoBehaviour {
   void Start() { birth = Time.time; }
 
   void Update() {
-    if (Time.time - birth > lifespan) Destroy(gameObject);
+    if (Time.time - birth > lifespan) {
+      if (GetComponent<ParticleSystem>() != null) {
+        GetComponent<Renderer>().enabled = false;
+        GetComponent<Collider>().enabled = false;
+        if (Time.time - birth > GetComponent<ParticleSystem>().main.duration) {
+          Destroy(gameObject);
+          Debug.Log("Explostion Destroyed");
+        }
+      } else {
+        Destroy(gameObject);
+      }
+    }
   }
 }

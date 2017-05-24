@@ -3,17 +3,24 @@ using System.Collections;
 
 public class VehicleController : MonoBehaviour {
   public bool canFly = false;
+  public bool isBoat = true;
   public bool bankTurn = true;
   public bool isChildScript = true;
   public float camDistance = 4f;
   public float moveSpeed = 3f;
   public float sprintMultiplier = 3f;
+  public float acceleration = 0.2f;
+  public float turnRate = 2.0f;
+  public float maxSlope = 45f;
+  public float fuelRemaining = 60f;
 
   private float forward = 0;
+  private float forward_actual = 0;
   private float turn = 0;
   private float lookH = 0;
   private float lookV = 0;
   private float sprint = 0;
+  private float lastVelocity = 0;
   private Camera cam;
 
   private Rigidbody rbody;
@@ -39,8 +46,15 @@ public class VehicleController : MonoBehaviour {
 
   public
    void Update() {
-     rbody.rotation = Quaternion.Euler(0, rbody.rotation.eulerAngles.y, 0);
-     if (!GameData.inVehicle) return;
+     if (isBoat) {
+       rbody.rotation = Quaternion.Euler(0, rbody.rotation.eulerAngles.y, 0);
+     }
+     if (GameData.Vehicle != this) return;
+     fuelRemaining -= Time.deltaTime;
+     if (fuelRemaining < 0) {
+       if (GameData.Vehicle = this) GameData.Vehicle = null;
+       return;
+     }
      if (!isChildScript) {
        forward = Input.GetAxis("Vertical");
        turn = Input.GetAxis("Horizontal");
@@ -49,20 +63,41 @@ public class VehicleController : MonoBehaviour {
        lookV = Input.GetAxis("Mouse Y");
      }
 
-     if (Mathf.Abs(forward) > 0.2) {
-       rbody.rotation = Quaternion.Euler(0, rbody.rotation.eulerAngles.y + turn,
-                                         turn * -10f);
-     }
-     rbody.velocity =
-         (forward > 0
-              ? (moveSpeed + moveSpeed * sprint * (sprintMultiplier - 1)) *
-                    (Mathf.Abs(forward))
-              : -0.5f) *
-         (Quaternion.Euler(0, rbody.rotation.eulerAngles.y, 0) *
-          Vector3.forward);
 
-     rbody.position = new Vector3(
-         rbody.position.x, TerrainGenerator.waterHeight, rbody.position.z);
+     float forward_goal = forward;
+     if (forward_actual < forward_goal)
+       forward_actual += acceleration * Time.deltaTime;
+     if (forward_actual > forward_goal)
+       forward_actual -= acceleration * Time.deltaTime;
+     if ((rbody.rotation.eulerAngles.x < maxSlope ||
+          rbody.rotation.eulerAngles.x > 360 - maxSlope) &&
+         (rbody.rotation.eulerAngles.z < maxSlope ||
+          rbody.rotation.eulerAngles.z > 360 - maxSlope)) {
+       if (Mathf.Abs(forward_actual) > 0.2 && bankTurn && isBoat) {
+         rbody.rotation = Quaternion.Euler(
+             0, rbody.rotation.eulerAngles.y + turn, turn * -10f);
+       } else if (Mathf.Abs(forward_actual) > 0.2) {
+         rbody.rotation = Quaternion.Euler(
+             rbody.rotation.eulerAngles.x,
+             rbody.rotation.eulerAngles.y + turn * forward_actual * turnRate,
+             rbody.rotation.eulerAngles.z);
+       }
+       rbody.velocity =
+           ((forward_actual > 0
+                 ? (moveSpeed + moveSpeed * sprint * (sprintMultiplier - 1)) *
+                       (Mathf.Abs(forward_actual))
+                 : 0.5f * moveSpeed * forward_actual) *
+            (Quaternion.Euler(0, rbody.rotation.eulerAngles.y, 0) *
+             Vector3.forward)) +
+           Vector3.up * rbody.velocity.y;
+     }
+
+     if(isBoat) {
+       rbody.position = new Vector3(
+           rbody.position.x, TerrainGenerator.waterHeight, rbody.position.z);
+     } else {
+       rbody.velocity += Vector3.up * -9.81f * Time.deltaTime;
+     }
 
      cam.transform.rotation =
          Quaternion.Euler(cam.transform.eulerAngles.x - lookV,
@@ -86,5 +121,11 @@ public class VehicleController : MonoBehaviour {
          camDistance;
      newCameraPos += rbody.position + Vector3.up * 2f;
      cam.transform.position = newCameraPos;
+
+     if (lastVelocity - rbody.velocity.magnitude > 5) {
+       GameData.health--;
+     }
+     Debug.Log(lastVelocity - rbody.velocity.magnitude);
+     lastVelocity = rbody.velocity.magnitude;
    }
  }
