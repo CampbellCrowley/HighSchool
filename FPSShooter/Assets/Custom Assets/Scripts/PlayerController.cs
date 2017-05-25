@@ -358,6 +358,9 @@ class PlayerController : NetworkBehaviour {
                      sprintInput, Camera.GetComponent<Camera>());
     }
     timeInVehicle += Time.deltaTime;
+    if(GameData.Vehicle!= null && GameData.Vehicle.fuelRemaining < 0) {
+      ExitVehicle();
+    }
     if (GameData.Vehicle != null) {
       transform.position =
           GameData.Vehicle.gameObject.transform.position + Vector3.up * 0.25f;
@@ -365,6 +368,14 @@ class PlayerController : NetworkBehaviour {
       if (MiniMapCamera != null) {
         MiniMapCamera.transform.position =
             transform.position + miniMapRelativePosition;
+      }
+      if (GameData.Vehicle.fuelRemaining < 100) {
+        usernameOSD.text +=
+            "\n" + (GameData.Vehicle.isBoat
+                        ? "Boat"
+                        : "Car" + " has " +
+                              Mathf.Round(GameData.Vehicle.fuelRemaining) +
+                              " Fuel Remaining");
       }
       moveHorizontal = 0;
       moveVertical = 0;
@@ -380,19 +391,7 @@ class PlayerController : NetworkBehaviour {
                                       Camera.GetComponent<Camera>());
       }
       if (interact > 0.5 && timeInVehicle > 0.5f) {
-        timeInVehicle = 0.0f;
-        GameData.Vehicle = null;
-
-        GetComponent<Collider>().enabled = true;
-
-        transform.position += Vector3.up * 2f;
-
-        SkinnedMeshRenderer[] renderers =
-            GetComponentsInChildren<SkinnedMeshRenderer>();
-        foreach (SkinnedMeshRenderer r in renderers) {
-          r.shadowCastingMode =
-              UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-        }
+        ExitVehicle();
       }
     } else {
       RaycastHit raycast;
@@ -401,23 +400,26 @@ class PlayerController : NetworkBehaviour {
                       10f);
       if (raycast.transform != null &&
           raycast.transform.CompareTag("Vehicle")) {
-        if (interact > 0.5f && timeInVehicle > 0.5f) {
-          GameData.Vehicle =
-              raycast.transform.gameObject.GetComponent<VehicleController>();
-          timeInVehicle = 0.0f;
-          GetComponent<Collider>().enabled = false;
-          SkinnedMeshRenderer[] renderers =
-              GetComponentsInChildren<SkinnedMeshRenderer>();
-          foreach (SkinnedMeshRenderer r in renderers) {
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+        if (raycast.transform.gameObject.GetComponent<VehicleController>()
+                .fuelRemaining > 0) {
+          if (interact > 0.5f && timeInVehicle > 0.5f) {
+            EnterVehicle(
+                raycast.transform.gameObject.GetComponent<VehicleController>());
+          } else {
+            usernameOSD.text +=
+                "\nPress \"E\" to enter " +
+                (raycast.transform.gameObject.GetComponent<VehicleController>()
+                         .isBoat
+                     ? "boat"
+                     : "car");
           }
         } else {
           usernameOSD.text +=
-              "\nPress \"E\" to enter " +
+              "\n" +
               (raycast.transform.gameObject.GetComponent<VehicleController>()
                        .isBoat
                    ? "boat"
-                   : "car");
+                   : "car" + " is out of fuel!");
         }
       }
     }
@@ -513,11 +515,11 @@ class PlayerController : NetworkBehaviour {
         collectedCounter.text =
             "Bombs Remaining: " + GameData.collectedCollectibles;
       }
+      if (lifeCounter != null) {
+        lifeCounter.text =
+            GameData.health + " Health, " + GameData.tries + " Tries";
+      }
       if (GameData.Vehicle == null) {
-        if (lifeCounter != null) {
-          lifeCounter.text =
-              GameData.health + " Health, " + GameData.tries + " Tries";
-        }
         if (stamina != null) {
           stamina.text = "Stamina: ";
           for (int i = 0; i < (int)(staminaRemaining * staminaCountBars); i++) {
@@ -528,6 +530,10 @@ class PlayerController : NetworkBehaviour {
             stamina.text += "!";
           }
         }
+      } else if (stamina != null) {
+        stamina.text = "";
+      }
+      if (GameData.Vehicle == null) {
       }
       if (timer != null) {
         float timeRemaining = Mathf.Round((endTime - Time.time) * 10f) / 10f;
@@ -811,6 +817,7 @@ class PlayerController : NetworkBehaviour {
     if (isDead) return;
     isDead = true;
     GameData.tries--;
+    ExitVehicle();
     if (GameData.tries <= 0) {
       PlaySound(sounds.LevelFail, 1.0f);
     } else {
@@ -846,7 +853,7 @@ class PlayerController : NetworkBehaviour {
   void UnDead() {
     transform.position = spawnLocation;
     transform.rotation = Quaternion.identity;
-    Camera.transform.rotation = cameraSpawnRotation;
+    Camera.transform.rotation = Quaternion.identity;
     spawned = false;
     isDead = false;
     GameData.health = 5;
@@ -857,6 +864,38 @@ class PlayerController : NetworkBehaviour {
     Destroy(Ragdoll);
     GetComponent<CapsuleCollider>().enabled = true;
     GetComponent<Animator>().enabled = true;
+  }
+
+  public void EnterVehicle(VehicleController vehicle) {
+     if (vehicle == null) return;
+     GameData.Vehicle = vehicle;
+     timeInVehicle = 0.0f;
+     GetComponent<Collider>().enabled = false;
+     SkinnedMeshRenderer[] renderers =
+         GetComponentsInChildren<SkinnedMeshRenderer>();
+     foreach (SkinnedMeshRenderer r in renderers) {
+       r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+     }
+   }
+ public
+  void ExitVehicle() {
+    if (GameData.Vehicle == null) return;
+    timeInVehicle = 0.0f;
+
+    GetComponent<Collider>().enabled = true;
+
+    transform.position = GameData.Vehicle.transform.position + Vector3.up * 2f;
+    transform.rotation = Quaternion.Euler(
+        0, GameData.Vehicle.transform.rotation.eulerAngles.y, 0);
+    Camera.transform.rotation = transform.rotation;
+
+    SkinnedMeshRenderer[] renderers =
+        GetComponentsInChildren<SkinnedMeshRenderer>();
+    foreach (SkinnedMeshRenderer r in renderers) {
+      r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+    }
+
+    GameData.Vehicle = null;
   }
 
   void OnAnimatorIK() {
@@ -906,7 +945,8 @@ class PlayerController : NetworkBehaviour {
   }
   void PlaySound(AudioClip clip, float volume = -1f) {
     if (sounds.Player != null && clip != null && GameData.soundEffects) {
-      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+       AudioPlayer player = Instantiate(sounds.Player, transform.position,
+                                        Quaternion.identity) as AudioPlayer;
       player.clip = clip;
       if (volume >= 0f && volume <= 1f) {
         player.volume = volume;

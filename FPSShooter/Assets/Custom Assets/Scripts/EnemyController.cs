@@ -75,7 +75,7 @@ class EnemyController : MonoBehaviour {
     health = StartHealth;
     ground = FindObjectOfType<TerrainGenerator>();
     if (ground != null) {
-      Debug.Log(gameObject.name + " found TerrainGenerator!");
+      // Debug.Log(gameObject.name + " found TerrainGenerator!");
     } else {
       Debug.LogWarning(gameObject.name + " did not find TerrainGenerator.");
     }
@@ -123,7 +123,7 @@ class EnemyController : MonoBehaviour {
     if (ground == null) {
       ground = FindObjectOfType<TerrainGenerator>();
       if (ground != null) {
-        Debug.Log(gameObject.name + " found TerrainGenerator!");
+        // Debug.Log(gameObject.name + " found TerrainGenerator!");
       }
     }
     if (Time.time - spawnTime >= 1f) {
@@ -280,7 +280,7 @@ class EnemyController : MonoBehaviour {
       Physics.IgnoreCollision(GetComponent<Collider>(),
                               projectile.GetComponent<Collider>());
       projectile.transform.parent = null;
-      PlaySound(sounds.ShootSound);
+      PlaySound(sounds.ShootSound, 1f);
     }
 
     if(Bomb != null && Time.time - bombDropInterval > lastBombDropTime) {
@@ -293,7 +293,7 @@ class EnemyController : MonoBehaviour {
                               bomb.GetComponent<Collider>());
       bomb.transform.parent = null;
       bomb.GetComponent<Rigidbody>().useGravity = true;
-      PlaySound(sounds.BombDrop);
+      PlaySound(sounds.BombDrop, 1f);
     }
 
     // Spawn a copy at a random location around the player.
@@ -316,27 +316,31 @@ class EnemyController : MonoBehaviour {
       if (nma != null) nma.enabled = false;
       Instantiate(gameObject, spawnPosition, Quaternion.identity);
       if (nma != null) nma.enabled = true;
-      Debug.Log("Enemy Spawned");
+      //Debug.Log("Enemy Spawned");
     }
     if (spawnChildren && GameData.numEnemies > 1 &&
         Vector2.Distance(
             new Vector2(transform.position.x, transform.position.z),
             new Vector2(player.transform.position.x,
                         player.transform.position.z)) > 150f) {
-      Debug.Log("Enemy Despawning " + transform.position + " - " +
-                player.transform.position + " = " +
-                Vector2.Distance(
-                    new Vector2(transform.position.x, transform.position.z),
-                    new Vector2(player.transform.position.x,
-                                player.transform.position.z)));
+      //Debug.Log("Enemy Despawning " + transform.position + " - " +
+      //          player.transform.position + " = " +
+      //          Vector2.Distance(
+      //              new Vector2(transform.position.x, transform.position.z),
+      //              new Vector2(player.transform.position.x,
+      //                          player.transform.position.z)));
       Destroy(gameObject);
     }
   }
 
-  void PlaySound(AudioClip clip) {
+  void PlaySound(AudioClip clip, float volume = -1f) {
     if (sounds.Player != null && clip != null && GameData.soundEffects) {
-      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+      AudioPlayer player = Instantiate(sounds.Player, transform.position,
+                                       Quaternion.identity) as AudioPlayer;
       player.clip = clip;
+      if (volume >= 0f && volume <= 1f) {
+        player.volume = volume;
+      }
     }
   }
 

@@ -19,6 +19,7 @@ class AudioPlayer : MonoBehaviour {
         Destroy(gameObject);
       } else {
         source = gameObject.AddComponent<AudioSource>() as AudioSource;
+        source.spatialBlend = 1.0f;
         source.clip = clip;
         source.volume = volume;
         source.Play();

@@ -2590,9 +2590,10 @@ public class TerrainGenerator : MonoBehaviour {
   float GetTerrainHeight(GameObject player) {
     return GetTerrainHeight(player.transform.position);
   }
- public float GetTerrainHeight(float x, float z) {
+ public
+  float GetTerrainHeight(float x, float z) {
     return GetTerrainHeight(new Vector3(x, 0, z));
- }
+  }
  public
   float GetTerrainHeight(Vector3 position) {
     int xCenter = Mathf.RoundToInt((position.x - terrWidth / 2) / terrWidth);

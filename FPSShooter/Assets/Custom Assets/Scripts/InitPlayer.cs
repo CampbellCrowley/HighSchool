@@ -22,7 +22,7 @@ class InitPlayer : MonoBehaviour {
   }
  public
   void updatePosition(float x, float y, float z) {
-    transform.position = new Vector3(x, y, z);
+    transform.position = new Vector3(x, y + 0.5f, z);
     Debug.Log("Player moved to " + transform.position);
   }
  public

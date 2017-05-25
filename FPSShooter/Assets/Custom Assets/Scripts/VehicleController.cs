@@ -1,6 +1,11 @@
 using UnityEngine;
 using System.Collections;
 
+[System.Serializable]
+public class Sounds {
+  public AudioPlayer Player;
+  public AudioClip carCrash;
+}
 public class VehicleController : MonoBehaviour {
   public bool canFly = false;
   public bool isBoat = true;
@@ -12,8 +17,12 @@ public class VehicleController : MonoBehaviour {
   public float acceleration = 0.2f;
   public float turnRate = 2.0f;
   public float maxSlope = 45f;
+  public float startFuel = 60f;
   public float fuelRemaining = 60f;
+  public bool spawnRandomly = false;
+  public Sounds sounds;
 
+  private bool alreadyCountedAsDead = false;
   private float forward = 0;
   private float forward_actual = 0;
   private float turn = 0;
@@ -26,7 +35,12 @@ public class VehicleController : MonoBehaviour {
   private Rigidbody rbody;
 
   public
-   void Start() { rbody = GetComponent<Rigidbody>(); }
+   void Awake() { GameData.numVehicles++; }
+  public
+   void Start() {
+     rbody = GetComponent<Rigidbody>();
+     fuelRemaining = startFuel;
+   }
 
   public
    void UpdateInputs(float forward, float turn, float lookH, float lookV,
@@ -39,22 +53,59 @@ public class VehicleController : MonoBehaviour {
      this.cam = cam;
    }
 
-  public void FixedUpdate() {
-    transform.position = rbody.position;
-    transform.rotation = rbody.rotation;
-  }
+  public
+   void FixedUpdate() {
+     if (spawnRandomly) {
+       GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+       if (players.Length > 0) {
+         if (GameData.numVehicles < 5) {
+           GameObject player = players[Random.Range(0, players.Length)];
+           Instantiate(gameObject, player.transform.position +
+                                       Random.insideUnitSphere * 300f,
+                       Quaternion.identity);
+         }
+         if (GameData.numVehicles > 1) {
+           bool despawn = true;
+           foreach (GameObject p in players) {
+             if (Vector3.Distance(p.transform.position, transform.position) <
+                 300) {
+               despawn = false;
+               break;
+             }
+           }
+           if (despawn) {
+             Debug.Log("Despawning Car (" + GameData.numVehicles + ")");
+             GameData.numVehicles--;
+             alreadyCountedAsDead = true;
+             Destroy(gameObject);
+           }
+         }
+       }
+     }
+     TerrainGenerator terrain = FindObjectOfType<TerrainGenerator>();
+     if (terrain != null) {
+       float terrainHeight = terrain.GetTerrainHeight(rbody.position);
+       if (rbody.position.y < terrainHeight) {
+         rbody.position =
+             new Vector3(rbody.position.x, terrainHeight, rbody.position.z);
+       }
+     }
+     transform.position = rbody.position;
+     transform.rotation = rbody.rotation;
+   }
 
   public
    void Update() {
      if (isBoat) {
        rbody.rotation = Quaternion.Euler(0, rbody.rotation.eulerAngles.y, 0);
      }
-     if (GameData.Vehicle != this) return;
-     fuelRemaining -= Time.deltaTime;
-     if (fuelRemaining < 0) {
-       if (GameData.Vehicle = this) GameData.Vehicle = null;
+     if (GameData.Vehicle != this) {
+       forward_actual = 0;
+       lastVelocity = rbody.velocity.magnitude;
        return;
      }
+     fuelRemaining -= Time.deltaTime;
+     if (fuelRemaining < 0) return;
      if (!isChildScript) {
        forward = Input.GetAxis("Vertical");
        turn = Input.GetAxis("Horizontal");
@@ -122,10 +173,29 @@ public class VehicleController : MonoBehaviour {
      newCameraPos += rbody.position + Vector3.up * 2f;
      cam.transform.position = newCameraPos;
 
-     if (lastVelocity - rbody.velocity.magnitude > 5) {
+     if (lastVelocity - rbody.velocity.magnitude > 500 * Time.deltaTime) {
        GameData.health--;
+       Debug.Log("Car Crash! " + (lastVelocity - rbody.velocity.magnitude) +
+                 "m/s/s, " + Time.deltaTime + "s");
+       PlaySound(sounds.carCrash);
      }
-     Debug.Log(lastVelocity - rbody.velocity.magnitude);
      lastVelocity = rbody.velocity.magnitude;
    }
- }
+
+   void PlaySound(AudioClip clip, float volume = -1f) {
+     if (sounds.Player != null && clip != null && GameData.soundEffects) {
+       AudioPlayer player = Instantiate(sounds.Player, transform.position,
+                                        Quaternion.identity) as AudioPlayer;
+       player.clip = clip;
+       if (volume >= 0f && volume <= 1f) {
+         player.volume = volume;
+       }
+     }
+   }
+  public
+   void OnDestroy() {
+     if (!alreadyCountedAsDead) {
+       GameData.numVehicles--;
+     }
+   }
+}

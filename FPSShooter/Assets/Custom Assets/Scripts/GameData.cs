@@ -52,6 +52,8 @@ class GameData : MonoBehaviour {
  public
   static int numEnemies = 0;
  public
+  static int numVehicles = 0;
+ public
   static bool levelComplete() {
     return numEnemies == 0;
   }

@@ -145,7 +145,7 @@ class PlayerShooter : MonoBehaviour {
 
     if (Crosshair != null) {
       Crosshair.text = "+";
-      if (reloadTime > 0) {
+      if (reloadTime > 1) {
         Crosshair.text += "\nReloading";
         for (int i = 0; i < reloadTime; i++) {
           Crosshair.text += ".";
@@ -186,7 +186,7 @@ class PlayerShooter : MonoBehaviour {
             0, projectilePlaceholder.transform.position - Vector3.up * 0.1f);
         EnemyController enemy =
             raycast.transform.gameObject.GetComponent<EnemyController>();
-        if (enemy != null && (enemy.health -= 2) <= 0) {
+        if (enemy != null && (enemy.health -= 3) <= 0) {
           enemy.kill();
           line.SetPosition(1, raycast.transform.position);
         } else {
@@ -241,7 +241,8 @@ class PlayerShooter : MonoBehaviour {
   }
   void PlaySound(AudioClip clip) {
     if (sounds.Player != null && clip != null && GameData.soundEffects) {
-      AudioPlayer player = Instantiate(sounds.Player) as AudioPlayer;
+       AudioPlayer player = Instantiate(sounds.Player, transform.position,
+                                        Quaternion.identity) as AudioPlayer;
       player.clip = clip;
     }
   }
