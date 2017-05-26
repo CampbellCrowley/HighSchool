@@ -381,12 +381,12 @@ public class TerrainGenerator : MonoBehaviour {
     // where the player will spawn.
     // float playerY = terrains[GetTerrainWithCoord(maxX / 2, maxZ / 2)]
     float playerY = GetTerrainHeight(playerX, playerZ);
-    // Starts at 1 because there is a precision issue with generating chunks
-    // that will cause chunks not to load if the player's position is exactly
-    // (0,0).
+    // Starts off of edges  because there is a precision issue with generating
+    // chunks that will cause chunks not to load if the player's position is
+    // exactly (0,0).
     // TODO: Fix this in either Generator, or decide if this is a good enough
     // solution.
-    int tries = 1;
+    int tries = terrWidth;
     while (tries < terrWidth * terrWidth &&
            playerY < TerrainGenerator.waterHeight) {
       playerX = tries % terrWidth;

@@ -6,6 +6,8 @@ class AudioPlayer : MonoBehaviour {
  public
   AudioClip clip;
   [Range(0.0f, 1.0f)] public float volume = 0.5f;
+ public
+  bool loop = false;
 
  private
   AudioSource source;
@@ -22,6 +24,7 @@ class AudioPlayer : MonoBehaviour {
         source.spatialBlend = 1.0f;
         source.clip = clip;
         source.volume = volume;
+        source.loop = loop;
         source.Play();
         started = true;
       }

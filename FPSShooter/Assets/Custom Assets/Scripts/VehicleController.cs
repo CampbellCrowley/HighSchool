@@ -56,17 +56,18 @@ public class VehicleController : MonoBehaviour {
   public
    void FixedUpdate() {
      if (spawnRandomly) {
-       GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+       PlayerController[] players = FindObjectsOfType<PlayerController>();
        if (players.Length > 0) {
          if (GameData.numVehicles < 5) {
-           GameObject player = players[Random.Range(0, players.Length)];
+           GameObject player =
+               players[Random.Range(0, players.Length)].gameObject;
            Instantiate(gameObject, player.transform.position +
                                        Random.insideUnitSphere * 300f,
                        Quaternion.identity);
          }
          if (GameData.numVehicles > 1) {
            bool despawn = true;
-           foreach (GameObject p in players) {
+           foreach (PlayerController p in players) {
              if (Vector3.Distance(p.transform.position, transform.position) <
                  300) {
                despawn = false;
@@ -194,6 +195,16 @@ public class VehicleController : MonoBehaviour {
    }
   public
    void OnDestroy() {
+     if (GameData.numVehicles < 5) {
+       PlayerController[] players = FindObjectsOfType<PlayerController>();
+       if (players.Length > 0) {
+         GameObject player =
+             players[Random.Range(0, players.Length)].gameObject;
+         Instantiate(gameObject,
+                     player.transform.position + Random.insideUnitSphere * 300f,
+                     Quaternion.identity);
+       }
+     }
      if (!alreadyCountedAsDead) {
        GameData.numVehicles--;
      }

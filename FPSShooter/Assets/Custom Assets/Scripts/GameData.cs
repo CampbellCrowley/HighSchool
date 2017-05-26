@@ -55,7 +55,7 @@ class GameData : MonoBehaviour {
   static int numVehicles = 0;
  public
   static bool levelComplete() {
-    return numEnemies == 0;
+    return true;
   }
  public
   static int getLevel() {
@@ -63,6 +63,16 @@ class GameData : MonoBehaviour {
     //     .GetSceneByName(UnityEngine.Networking.MyNetworkManagerHUD.getLevel())
     //     .buildIndex;
     return SceneManager.GetActiveScene().buildIndex;
+  }
+ public
+  static void gotoLevel(int level) {
+    int nextIndex = level;
+    Debug.Log("Goto Level! (" + nextIndex + ")");
+    GameData.Vehicle = null;
+    GameData.isPaused = false;
+    SceneManager.LoadScene(nextIndex);
+    FindObjectOfType<UnityEngine.Networking.NetworkManager>()
+        .ServerChangeScene(SceneManager.GetSceneByBuildIndex(nextIndex).name);
   }
  public
   static void nextLevel() {
@@ -110,10 +120,17 @@ class GameData : MonoBehaviour {
 
  public
   void Update() {
-    if (Vehicle != null && getLevel() == 1 && Vehicle.name.Contains("boat")) {
-      nextLevel();
+    if (Vehicle != null && Vehicle.name.Contains("boat")) {
+      if (getLevel() == 1) {
+        nextLevel();
+      } else if (getLevel() == 2) {
+        //GameObject.FindObjectWithTag("Target").transform.position += Vector3.
+      }
     }
 
+    if(Input.GetKeyDown("b") && getLevel() != 0) {
+      gotoLevel(4);
+    }
     if(Input.GetButtonDown("Pause") && getLevel() != 0) {
       GameData.isPaused = !GameData.isPaused;
       GameData.showCursor = isPaused;
