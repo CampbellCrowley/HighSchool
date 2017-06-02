@@ -20,7 +20,7 @@ class PortalController : MonoBehaviour {
     }
     transform.position = new Vector3(
         startPosition.x,
-        terrain.GetTerrainHeight(startPosition.x, startPosition.z) + 7f,
+        terrain.GetTerrainHeight(startPosition.x, startPosition.z) + 4f,
         startPosition.z);
   }
 }

@@ -42,7 +42,8 @@ class InitPlayer : MonoBehaviour {
           Mathf.Lerp(transform.position.y, groundHeight + spawnHeight,
                      1.0f * Time.deltaTime) *
               Vector3.up +
-          transform.position.x * Vector3.right +
+          (transform.position.x == 0 ? 1f : transform.position.x) *
+              Vector3.right +
           transform.position.z * Vector3.forward;
     } else {
       transform.position += Vector3.forward * Time.deltaTime * moveSpeed;

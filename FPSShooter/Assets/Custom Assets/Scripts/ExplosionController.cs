@@ -23,4 +23,11 @@ class ExplosionController : MonoBehaviour {
       }
     }
   }
+ public
+  void OnCollisionEnter(Collision other) {
+    if (other.gameObject.CompareTag("Boss")) {
+      FindObjectOfType<BossController>().Damage();
+      Destroy(gameObject);
+    }
+  }
 }

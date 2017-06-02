@@ -101,6 +101,8 @@ class PlayerController : NetworkBehaviour {
   float flyDownEndTime = 1.5f;
 
  private
+  Cinematic cinematic;
+ private
   Rigidbody rbody;
  private
   Animator anim;
@@ -164,6 +166,8 @@ class PlayerController : NetworkBehaviour {
   Transform lastFloorTransform;
  private
   Vector3 lastFloorTransformPosition;
+ private
+  bool cinematicsFinished = false;
 
   [SyncVar] public string username = "Username";
   [SyncVar] private Vector3 rbodyPosition, rbodyVelocity, transformPosition;
@@ -190,6 +194,7 @@ class PlayerController : NetworkBehaviour {
     }
     GameData.showCursor = false;
 
+    cinematic = FindObjectOfType<Cinematic>();
     anim = GetComponent<Animator>();
     rbody = GetComponent<Rigidbody>();
 
@@ -264,6 +269,13 @@ class PlayerController : NetworkBehaviour {
     }
 
     if (usernameOSD != null) usernameOSD.text = nameplate.text;
+
+    // Cinematics
+    if (cinematic != null && !cinematic.isDone) {
+      return;
+    } else if (cinematic != null) {
+      cinematicsFinished = true;
+    }
 
     if (Input.GetKeyDown("k")) {
       GameData.health = 0;
@@ -347,6 +359,11 @@ class PlayerController : NetworkBehaviour {
       Camera.transform.rotation = Quaternion.Euler(70f, 30f, 0f);
       cameraSpawnRotation = Camera.transform.rotation;
       spawnLocation = transform.position;
+    } else if (cinematicsFinished && !spawned) {
+      levelStartTime = Time.time;
+      cameraSpawnRotation = Camera.transform.rotation;
+      spawnLocation = transform.position;
+      spawned = true;
     } else {
       spawned = true;
     }
@@ -887,6 +904,7 @@ class PlayerController : NetworkBehaviour {
     transform.position = GameData.Vehicle.transform.position + Vector3.up * 2f;
     transform.rotation = Quaternion.Euler(
         0, GameData.Vehicle.transform.rotation.eulerAngles.y, 0);
+    rbody.velocity = Vector3.zero;
     Camera.transform.rotation = transform.rotation;
 
     SkinnedMeshRenderer[] renderers =

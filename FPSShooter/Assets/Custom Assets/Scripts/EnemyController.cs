@@ -145,6 +145,7 @@ class EnemyController : MonoBehaviour {
       GetComponent<MeshRenderer>().material.color = Color.white;
     }
     } catch (MissingComponentException e) {
+    } catch (System.NullReferenceException e) {
     }
 
     if (GameData.isPaused) return;

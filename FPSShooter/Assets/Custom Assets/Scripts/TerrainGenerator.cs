@@ -29,7 +29,11 @@ using System.Collections;
 using System.Collections.Generic;
 
 public static class Pauser {
-  public static void pause() { UnityEditor.EditorApplication.isPaused = true; }
+  public static void pause() {
+#if UNITY_EDITOR
+    UnityEditor.EditorApplication.isPaused = true;
+#endif
+  }
 }
 
 [Serializable] public class GeneratorModes {
@@ -386,7 +390,8 @@ public class TerrainGenerator : MonoBehaviour {
     // exactly (0,0).
     // TODO: Fix this in either Generator, or decide if this is a good enough
     // solution.
-    int tries = terrWidth;
+    //int tries = terrWidth;
+    int tries = (int)(terrWidth * 1.5);
     while (tries < terrWidth * terrWidth &&
            playerY < TerrainGenerator.waterHeight) {
       playerX = tries % terrWidth;

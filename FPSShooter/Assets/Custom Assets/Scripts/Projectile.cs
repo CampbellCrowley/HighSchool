@@ -52,7 +52,14 @@ class Projectile : MonoBehaviour {
  public
   void OnCollisionEnter(Collision other) {
     if (other.gameObject.CompareTag("Player")) {
-      GameData.health--;
+      if(GameData.getLevel() == 4) {
+        GameData.health = 0;
+      } else {
+        GameData.health--;
+      }
+    } else if(other.gameObject.CompareTag("Boss")) {
+      FindObjectOfType<BossController>().Damage();
+      Destroy(gameObject);
     }
   }
 }

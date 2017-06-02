@@ -16,18 +16,22 @@ class AudioPlayer : MonoBehaviour {
 
  public
   void Update() {
-    if (source == null || !source.isPlaying) {
-      if (started) {
-        Destroy(gameObject);
-      } else {
-        source = gameObject.AddComponent<AudioSource>() as AudioSource;
-        source.spatialBlend = 1.0f;
-        source.clip = clip;
-        source.volume = volume;
-        source.loop = loop;
-        source.Play();
-        started = true;
+    if (GameData.soundEffects) {
+      if (source == null || !source.isPlaying) {
+        if (started) {
+          Destroy(gameObject);
+        } else {
+          source = gameObject.AddComponent<AudioSource>() as AudioSource;
+          source.spatialBlend = 1.0f;
+          source.clip = clip;
+          source.volume = volume;
+          source.loop = loop;
+          source.Play();
+          started = true;
+        }
       }
+    } else if (source.isPlaying) {
+      Destroy(gameObject);
     }
   }
 }

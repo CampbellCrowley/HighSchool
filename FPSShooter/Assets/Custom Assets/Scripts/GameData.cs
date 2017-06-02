@@ -23,9 +23,12 @@ class GameData : MonoBehaviour {
       DontDestroyOnLoad(gameObject);
       Instance = this;
     } else if (Instance != this) {
-      Destroy(gameObject);
-      if (GetComponent<AudioSource>().clip != null)
+      if (GetComponent<AudioSource>().clip != null) {
         Instance.QueuedMusic = GetComponent<AudioSource>().clip;
+      } else if (QueuedMusic != null) {
+        Instance.QueuedMusic = QueuedMusic;
+      }
+      Destroy(gameObject);
     }
   }
  public
@@ -124,7 +127,15 @@ class GameData : MonoBehaviour {
       if (getLevel() == 1) {
         nextLevel();
       } else if (getLevel() == 2) {
-        //GameObject.FindObjectWithTag("Target").transform.position += Vector3.
+        GameObject Target = GameObject.FindWithTag("Target");
+        GameObject Player = GameObject.FindWithTag("Player");
+        Target.transform.localPosition = new Vector3(0, 0, 0);
+        Target.transform.position = new Vector3(
+            Target.transform.position.x, Target.transform.position.y, 10000);
+        if (Vector3.Distance(Target.transform.position,
+                             Player.transform.position) < 8000) {
+          nextLevel();
+        }
       }
     }
 
